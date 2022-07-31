@@ -15,6 +15,10 @@ namespace UserData_webapi
             linenotifyManagerToken = _configuration.GetValue<string>("line:linenotifyManagerToken"); ;
             linenotifyToken = _configuration.GetValue<string>("line:linenotifyToken");
         }
+        public string getusername(string ID)
+        {
+            return isRock.LineBot.Utility.GetUserInfo(ID, ChannelAccessToken).displayName;
+        }
         public void sendlinenotify(string Message,string  level)
         {
 

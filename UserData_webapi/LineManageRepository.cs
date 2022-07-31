@@ -1,4 +1,5 @@
 ﻿using NAudio.CoreAudioApi;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -43,13 +44,29 @@ namespace UserData_webapi
         {
             get { return _todoList; }
         }
-        public void adduser(LineUser lineUser)
+        public void adduser(LineUser lineUser,IConfiguration _configuration)
         {
-            _todoList.Add(lineUser);
+            linkline _linkline = new linkline(_configuration);
+            lineUser.Name = _linkline.getusername(lineUser.ID);
+            if (_todoList.Count(x=>x.ID== lineUser.ID)==0)
+            {
+                
+                    _todoList.Add(lineUser);
+            }
+            else
+            {
+                if (_todoList.FirstOrDefault(x => x.ID == lineUser.ID).Name!= lineUser.Name)
+                {
+                    _todoList.RemoveAll(x=>x.ID == lineUser.ID);
+                    _todoList.Add(lineUser);
+                }
+            }
+            SaveToFile();
         }
         public void deluser(string ID)
         {
             _todoList.RemoveAll(item => item.ID == ID);
+            SaveToFile();
         }
         public List<LineUser> getalluser()
         {
@@ -65,16 +82,20 @@ namespace UserData_webapi
             {
                 return "沒有找到任何使用者的資料";
             }
-            string Message = "用戶ID         角色\n";
+            string Message = "用戶ID、用戶姓名、角色\n";
             foreach (LineUser lineUser in getalluser())
             {
-                Message += $"{lineUser.ID}  {lineUser.Role}\n";
+                Message += $"{lineUser.ID}\n{lineUser.Name}\n{lineUser.Role}\n\n";
             }
             return Message;
         }
         public LineUser getuserrole(string Role)
         {
             return _todoList.FirstOrDefault(item => item.Role == Role);
+        }
+        public string getusername(string ID)
+        {
+            return _todoList.FirstOrDefault(item => item.ID == ID).Name;
         }
         public string changeRole(string ID, string Role)
         {

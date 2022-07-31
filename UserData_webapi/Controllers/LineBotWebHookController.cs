@@ -115,7 +115,7 @@ namespace UserData_webapi.Controllers
         [HttpPost("addlineuser")]
         public async Task<IActionResult> adduser([FromBody] LineUser lineUser)
         {
-            _lineBotManageRespository.adduser(lineUser);
+            _lineBotManageRespository.adduser(lineUser,_configuration);
             return Ok();
         }
         [HttpPost]
@@ -196,17 +196,17 @@ namespace UserData_webapi.Controllers
                         {
                             ID = item.source.userId,
                         };
-                        _lineBotManageRespository.adduser(lineUser);
+                        _lineBotManageRespository.adduser(lineUser,_configuration);
                         _jobRespository.sendmessage(
                             item.replyToken,
-                            $"frc打卡已被 \n{item.source.userId}\n加為好友",
-                            $"歡迎{item.source.userId}加入",
+                            $"frc打卡已被 \n{item}\n加為好友",
+                            $"歡迎{_lineBotManageRespository.getusername(item.source.userId)}加入",
                             "level1");
                         break;
                     //LINE Bot 被用戶封鎖
                     case "unfollow":
+                        _linkline.sendlinenotify($"frc打卡已被\n {_lineBotManageRespository.getusername(item.source.userId)}\n封鎖", "level1");
                         _lineBotManageRespository.deluser(item.source.userId);
-                        _linkline.sendlinenotify($"frc打卡已被\n {item.source.userId}\n封鎖", "level1");
                         break;
                     //LINE Bot 被加入聊天室
                     case "join":
@@ -214,17 +214,15 @@ namespace UserData_webapi.Controllers
                         {
                             ID = item.source.groupId,
                         };
-                        _lineBotManageRespository.adduser(lineUser);
                         _jobRespository.sendmessage(
                             item.replyToken,
-                            $"{(item.source.type == "room" ? item.source.roomId : item.source.groupId)}已被加入{item.source.type.ToString()}中",
-                            $"各位好，frc打卡已被加入{item.source.type}中",
+                            $"{(item.source.type == "room" ? item.source.roomId : item.source.groupId)}已被加入{_lineBotManageRespository.getusername(item.source.userId)}中",
+                            $"各位好，frc打卡已被加入{_lineBotManageRespository.getusername(item.source.userId)}中",
                             "level1");
                         break;
                     //LINE Bot 離開聊天室
                     case "leave":
-                        _lineBotManageRespository.deluser(item.source.userId);
-                        _linkline.sendlinenotify($"frc打卡已被刪除在{(item.source.type == "room" ? item.source.roomId : item.source.groupId)}中，類型是{item.source.type.ToString()}", "level1");
+                        _linkline.sendlinenotify($"frc打卡已被刪除在{(item.source.type == "room" ? item.source.roomId : item.source.groupId)}中，已被{_lineBotManageRespository.getusername(item.source.userId)}退出", "level1");
                         break;
                     //LINE Bot 收到 postback 訊息
                     case "postback":
@@ -262,6 +260,11 @@ namespace UserData_webapi.Controllers
         }
         private bool judgemessage(string Token, string message,string userID)
         {
+            LineUser lineUser = new LineUser()
+            {
+                ID = userID,
+            };
+            _lineBotManageRespository.adduser(lineUser, _configuration);
             string[] textmessage = ToNarrow(message).ToLower().Split(" ");
             //判斷命令
             if (textmessage.Length == 1)    //當只輸入了一個文字時
@@ -338,23 +341,23 @@ namespace UserData_webapi.Controllers
                         }
                         break;
                     case "lineuserid":
-                        //if (_lineBotManageRespository.getuserid(userID).Role == "admin")
-                        //{
+                        if (_lineBotManageRespository.getuserid(userID).Role == "admin")
+                        {
                             _jobRespository.sendmessage(
                             Token,
                             $"{userID}\n查詢了以line bot的使用者",
                             _lineBotManageRespository.listralluser(),
                             "level1");
-                        //}
-                        //else
-                        //{
-                            //_jobRespository.sendmessage(
-                            //    Token,
-                            //    $"{userID}\n查詢了個人資料，但權限不足",
-                            //    "您的權限不足，詳情請向管理員洽詢",
-                            //    "level1");
-                        //}
-                        break;
+                        }
+                        else
+                            {
+                                _jobRespository.sendmessage(
+                                    Token,
+                                    $"{userID}\n查詢了個人資料，但權限不足",
+                                    "您的權限不足，詳情請向管理員洽詢",
+                                    "level1");
+                            }
+                            break;
 
                     default:
                         return false;
