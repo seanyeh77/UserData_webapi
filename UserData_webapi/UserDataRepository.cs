@@ -82,6 +82,7 @@ namespace UserData_webapi
             {
                 item.state = false;
             }
+            SaveToFile();
         }
         public void Update(UserData item)
         {
@@ -124,6 +125,11 @@ namespace UserData_webapi
         public void changestate(int ID)
         {
             _todoList.FirstOrDefault(x => x.ID == ID).state = !_todoList.FirstOrDefault(x => x.ID == ID).state;
+            SaveToFile();
+        }
+        public bool getstate(int ID)
+        {
+            return _todoList.FirstOrDefault(x => x.ID == ID).state;
         }
     }
 }

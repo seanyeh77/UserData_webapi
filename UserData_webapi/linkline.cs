@@ -17,7 +17,16 @@ namespace UserData_webapi
         }
         public string getusername(string ID)
         {
-            return isRock.LineBot.Utility.GetUserInfo(ID, ChannelAccessToken).displayName;
+            string Name = null;
+            try
+            {
+                Name = isRock.LineBot.Utility.GetUserInfo(ID, ChannelAccessToken).displayName;
+            }
+            catch
+            {
+                return null;
+            }
+            return Name;
         }
         public void sendlinenotify(string Message,string  level)
         {

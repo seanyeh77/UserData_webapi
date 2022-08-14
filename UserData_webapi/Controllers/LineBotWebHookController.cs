@@ -8,6 +8,7 @@ using Microsoft.CognitiveServices.Speech;
 using NAudio.Wave;
 using isRock.LineBot;
 using Microsoft.CognitiveServices.Speech.Audio;
+using Microsoft.CognitiveServices.Speech.Transcription;
 
 namespace UserData_webapi.Controllers
 {
@@ -23,7 +24,7 @@ namespace UserData_webapi.Controllers
         private readonly IUserCardRepository _userCardRepository;
         private linkline _linkline;
         private readonly ILineBotManageRespository _lineBotManageRespository;
-        public LineBotWebHookController(ILogger<LineBotWebHookController> logger, IUserDataRepository userDataRepistory, ILineJobRespository lineJobRespository, IConfiguration configuration,ILineBotManageRespository lineBotManageRespository, IUserLogRepository userLogRepository,IUserCardRepository userCardRepository)
+        public LineBotWebHookController(ILogger<LineBotWebHookController> logger, IUserDataRepository userDataRepistory, ILineJobRespository lineJobRespository, IConfiguration configuration, ILineBotManageRespository lineBotManageRespository, IUserLogRepository userLogRepository, IUserCardRepository userCardRepository)
         {
             _configuration = configuration;
             _jobRespository = lineJobRespository;
@@ -113,9 +114,9 @@ namespace UserData_webapi.Controllers
             return Ok(_lineBotManageRespository.All);
         }
         [HttpPost("addlineuser")]
-        public async Task<IActionResult> adduser([FromBody] LineUser lineUser)
+        public IActionResult adduser([FromBody] LineUser lineUser)
         {
-            _lineBotManageRespository.adduser(lineUser,_configuration);
+            _lineBotManageRespository.adduser(lineUser, _configuration);
             return Ok();
         }
         [HttpPost]
@@ -125,7 +126,6 @@ namespace UserData_webapi.Controllers
 
             try
             {
-                LineUser lineUser = new LineUser();
                 var request = "";
                 using (StreamReader reader = new StreamReader(Request.Body, System.Text.Encoding.UTF8))
                 {
@@ -136,6 +136,13 @@ namespace UserData_webapi.Controllers
                 Event item = receivedmessage.events.FirstOrDefault();
                 //get JSON Body
 
+                LineUser lineUser = new LineUser()
+                {
+                    ID = item.source.userId,
+                };
+                _lineBotManageRespository.adduser(lineUser, _configuration);
+                string linename = _lineBotManageRespository.getusername(item.source.userId);
+                linename = linename == null ? item.source.userId : linename;
                 //判斷事件來源
                 switch (item.type)
                 {
@@ -145,11 +152,11 @@ namespace UserData_webapi.Controllers
                         switch (item.message.type)
                         {
                             case "text":
-                                judgemessage(item.replyToken, item.message.text, item.source.userId);
+                                judgemessage(item.replyToken, item.message.text, item.source.userId,linename);
                                 break;
                             case "audio":
                                 string[] audiotext = await _jobRespository.audiototext(item.message.id);
-                                for(int i = 0; i < audiotext.Length; i++)
+                                for (int i = 0; i < audiotext.Length; i++)
                                 {
                                     audiotext[i] = audiotext[i].Trim(new Char[] { '。', '.' });
                                 }
@@ -164,7 +171,8 @@ namespace UserData_webapi.Controllers
                                 }
                                 else if (audiotext[1] != null)
                                 {
-                                    if (!judgemessage(item.replyToken, audiotext[1],item.source.userId)) { 
+                                    if (!judgemessage(item.replyToken, audiotext[1], item.source.userId,linename))
+                                    {
                                         if (audiotext[0] != null)
                                         {
                                             _jobRespository.sendmessage(
@@ -179,7 +187,7 @@ namespace UserData_webapi.Controllers
                                 {
                                     _jobRespository.sendmessage(
                                         item.replyToken,
-                                        $"{item.source.userId}\n使用了語音",
+                                        $"{(linename)}\n使用了語音",
                                         $"你說了\n{audiotext[0]}\n{audiotext[1]}",
                                         "level1");
                                 }
@@ -196,16 +204,17 @@ namespace UserData_webapi.Controllers
                         {
                             ID = item.source.userId,
                         };
-                        _lineBotManageRespository.adduser(lineUser,_configuration);
+                        _lineBotManageRespository.adduser(lineUser, _configuration);
+                        linename = _lineBotManageRespository.getusername(item.source.userId);
                         _jobRespository.sendmessage(
                             item.replyToken,
-                            $"frc打卡已被 \n{item}\n加為好友",
-                            $"歡迎{_lineBotManageRespository.getusername(item.source.userId)}加入",
+                            $"frc打卡已被 \n{linename}\n加為好友",
+                            $"歡迎{linename}加入",
                             "level1");
                         break;
                     //LINE Bot 被用戶封鎖
                     case "unfollow":
-                        _linkline.sendlinenotify($"frc打卡已被\n {_lineBotManageRespository.getusername(item.source.userId)}\n封鎖", "level1");
+                        _linkline.sendlinenotify($"frc打卡已被\n {linename}\n封鎖", "level1");
                         _lineBotManageRespository.deluser(item.source.userId);
                         break;
                     //LINE Bot 被加入聊天室
@@ -258,13 +267,8 @@ namespace UserData_webapi.Controllers
             }
             return new string(c);
         }
-        private bool judgemessage(string Token, string message,string userID)
+        private bool judgemessage(string Token, string message, string userID,string linename)
         {
-            LineUser lineUser = new LineUser()
-            {
-                ID = userID,
-            };
-            _lineBotManageRespository.adduser(lineUser, _configuration);
             string[] textmessage = ToNarrow(message).ToLower().Split(" ");
             //判斷命令
             if (textmessage.Length == 1)    //當只輸入了一個文字時
@@ -274,14 +278,14 @@ namespace UserData_webapi.Controllers
                     case "help":
                         _jobRespository.sendmessage(
                             Token,
-                            $"{userID}查詢了功能選單",
+                            $"{linename}查詢了功能選單",
                             _jobRespository.function(),
                             "level1");
                         break;
                     case "url":
                         _jobRespository.sendmessage(
                             Token,
-                            $"{userID}查詢了網站",
+                            $"{linename}查詢了網站",
                             "https://team8723.azurewebsites.net/",
                             "level1");
                         break;
@@ -289,17 +293,17 @@ namespace UserData_webapi.Controllers
                         //if (_lineBotManageRespository.getuserid(userID).Role == "admin"){
                         _jobRespository.sendmessage(
                             Token,
-                            $"{userID}\n查詢了個人資料",
+                            $"{linename}\n查詢了個人資料",
                             _jobRespository.listdata(""),
                             "level1");
                         //}
                         //else
                         //{
-                            //_jobRespository.sendmessage(
-                            //Token,
-                            //$"{userID}\n查詢了個人資料，但權限不足",
-                            //"您的權限不足，詳情請向管理員洽詢",
-                            //"level1");
+                        //_jobRespository.sendmessage(
+                        //Token,
+                        //$"{userID}\n查詢了個人資料，但權限不足",
+                        //"您的權限不足，詳情請向管理員洽詢",
+                        //"level1");
                         //}
                         break;
                     case "state":
@@ -307,27 +311,27 @@ namespace UserData_webapi.Controllers
                         //{
                         _jobRespository.sendmessage(
                             Token,
-                            $"{userID}\n查詢了以簽到狀態",
+                            $"{linename}\n查詢了以簽到狀態",
                             _jobRespository.state(),
                             "level1");
                         //}
                         //else
                         //{
-                            //_jobRespository.sendmessage(
-                            //    Token,
-                            //    $"{userID}\n查詢了個人資料，但權限不足",
-                            //    "您的權限不足，詳情請向管理員洽詢",
-                            //    "level1");
+                        //_jobRespository.sendmessage(
+                        //    Token,
+                        //    $"{userID}\n查詢了個人資料，但權限不足",
+                        //    "您的權限不足，詳情請向管理員洽詢",
+                        //    "level1");
                         //}
                         break;
                     case "reset":
                         if (_lineBotManageRespository.getuserid(userID).Role == "admin")
                         {
                             reset();
-                            _linkline.sendlinenotify($"{Token}重製了狀態", "level1");
+                            _linkline.sendlinenotify($"{linename}重製了狀態", "level1");
                             _jobRespository.sendmessage(
                                 Token,
-                                $"{userID}\n查詢了以簽到狀態",
+                                $"{linename}\n重製了狀態",
                                 "以重製了狀態",
                                 "level1");
                         }
@@ -335,7 +339,7 @@ namespace UserData_webapi.Controllers
                         {
                             _jobRespository.sendmessage(
                                 Token,
-                                $"{userID}\n查詢了個人資料，但權限不足",
+                                $"{linename}\n查詢了個人資料，但權限不足",
                                 "您的權限不足，詳情請向管理員洽詢",
                                 "level1");
                         }
@@ -345,19 +349,19 @@ namespace UserData_webapi.Controllers
                         {
                             _jobRespository.sendmessage(
                             Token,
-                            $"{userID}\n查詢了以line bot的使用者",
+                            $"{linename}\n查詢了以line bot的使用者",
                             _lineBotManageRespository.listralluser(),
                             "level1");
                         }
                         else
-                            {
-                                _jobRespository.sendmessage(
-                                    Token,
-                                    $"{userID}\n查詢了個人資料，但權限不足",
-                                    "您的權限不足，詳情請向管理員洽詢",
-                                    "level1");
-                            }
-                            break;
+                        {
+                            _jobRespository.sendmessage(
+                                Token,
+                                $"{linename}\n查詢了個人資料，但權限不足",
+                                "您的權限不足，詳情請向管理員洽詢",
+                                "level1");
+                        }
+                        break;
 
                     default:
                         return false;
@@ -368,20 +372,28 @@ namespace UserData_webapi.Controllers
                 switch (textmessage.FirstOrDefault())
                 {
                     case "data":
-                            _jobRespository.sendmessage(
-                            Token,
-                            $"{userID}\n查詢了{textmessage[1]}的個人資料",
-                            _jobRespository.listdata(textmessage[1]),
-                            "level1");
+                        _jobRespository.sendmessage(
+                        Token,
+                        $"{linename}\n查詢了{textmessage[1]}的個人資料",
+                        _jobRespository.listdata(textmessage[1]),
+                        "level1");
                         break;
                     case "freeze":
                         if (_lineBotManageRespository.getuserid(userID).Role != "texter")
                         {
                             _jobRespository.sendmessage(
                             Token,
-                           $"{userID}\n想要凍結\n{textmessage[1]}\n的個人資料",
+                           $"{linename}\n想要凍結\n{textmessage[1]}\n的個人資料",
                             _jobRespository.freeze(textmessage[1]),
                             "level1");
+                        }
+                        else
+                        {
+                            _jobRespository.sendmessage(
+                                Token,
+                                $"{linename}\n查詢了個人資料，但權限不足",
+                                "您的權限不足，詳情請向管理員洽詢",
+                                "level1");
                         }
                         break;
                     case "disfreeze":
@@ -389,7 +401,7 @@ namespace UserData_webapi.Controllers
                         {
                             _jobRespository.sendmessage(
                             Token,
-                           $"{userID}\n想要解除凍結\n{textmessage[1]}\n的個人資料",
+                           $"{linename}\n想要解除凍結\n{textmessage[1]}\n的個人資料",
                             _jobRespository.disfreeze(textmessage[1]),
                             "level1");
                         }
@@ -397,7 +409,7 @@ namespace UserData_webapi.Controllers
                         {
                             _jobRespository.sendmessage(
                                 Token,
-                                $"{userID}\n查詢了個人資料，但權限不足",
+                                $"{linename}\n查詢了個人資料，但權限不足",
                                 "您的權限不足，詳情請向管理員洽詢",
                                 "level1");
                         }
@@ -416,7 +428,7 @@ namespace UserData_webapi.Controllers
                         {
                             _jobRespository.sendmessage(
                            Token,
-                           $"{userID}想要更改{textmessage[1]}的角色成{textmessage[2]}\n",
+                           $"{linename}想要更改{textmessage[1]}的角色成{textmessage[2]}\n",
                            _lineBotManageRespository.changeRole(textmessage[1], textmessage[2]),
                            "level1"
                            );
@@ -434,7 +446,7 @@ namespace UserData_webapi.Controllers
                         return false;
                 }
             }
-                return true;
+            return true;
         }
     }
 

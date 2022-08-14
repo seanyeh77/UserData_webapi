@@ -17,5 +17,6 @@
         void DeletefreezeID(int ID);
         void DeletedisfreezeID(int ID);
         void changestate(int ID);
+        bool getstate(int ID);
     }
 }
