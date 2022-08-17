@@ -50,12 +50,12 @@ namespace UserData_webapi.Controllers
                         _userLogRepistory.Insert(item);
                         int id = _userCardRepistory.GetID(item.UID);
                         _userDataRepository.changestate(_userCardRepistory.GetID(item.UID));
-                        linkline.sendlinenotify($"{_userDataRepository.getname(id)}已{(_userDataRepository.getIDstate(_userCardRepistory.GetID(item.UID)) ? "簽到" : "簽退")}({id.ToString("D6")})", "level2");
+                        linkline.sendlinenotify($"{_userDataRepository.getchinesename(id)}已{(_userDataRepository.getIDstate(_userCardRepistory.GetID(item.UID)) ? "簽到" : "簽退")}({id.ToString("D6")})", "level2");
                     }
                     else
                     {
                         int id = _userCardRepistory.GetID(item.UID);
-                        linkline.sendlinenotify($"{_userDataRepository.getname(id)}已{(_userDataRepository.getIDstate(_userCardRepistory.GetID(item.UID)) ? "簽到" : "簽退")}({id.ToString("D6")})\n但被結凍", "level2");
+                        linkline.sendlinenotify($"{_userDataRepository.getchinesename(id)}已{(_userDataRepository.getIDstate(_userCardRepistory.GetID(item.UID)) ? "簽到" : "簽退")}({id.ToString("D6")})\n但被結凍", "level2");
                         return BadRequest("freeze");
                     }
                 }

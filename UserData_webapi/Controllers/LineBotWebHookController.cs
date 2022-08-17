@@ -53,7 +53,7 @@ namespace UserData_webapi.Controllers
                         join b in _userDataRepository.All on a.ID equals b.ID
                         select new Userlogdataprint
                         {
-                            Name = b.Name,
+                            Name = b.ChineseName,
                             Time = a.time
                         };
             return Ok(data3);

@@ -9,7 +9,7 @@ namespace UserData_webapi
         [Required]
         public int ID { get; set; }
         [Required]
-        public int grade { get; set; }
+        public int? grade { get; set; }
         [Required]
         public float monaverage { get; set; }
         [Required]

@@ -84,7 +84,7 @@ namespace UserData_webapi.Controllers
                 {
                     _userCardRepistory.Insert(item);
                 }
-                linkline.sendlinenotify($"{_userDataRepository.getname(item.ID)}已新增卡片", "level2");
+                linkline.sendlinenotify($"{_userDataRepository.getchinesename(item.ID)}已新增卡片", "level2");
             }
             catch (Exception ex)
             {

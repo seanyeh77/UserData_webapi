@@ -15,12 +15,14 @@ namespace UserData_webapi.Controllers
         private readonly IUserDataRepository _userDataRepository;
         private readonly IUserCardRepository _userCardRepistory;
         private readonly IConfiguration _configuration;
-        public UserDataController(ILogger<UserDataController> logger, IUserDataRepository userDataRepistory, IUserCardRepository userCardRepistory ,IConfiguration configuration)
+        private readonly IFaceRepository _faceRepository;
+        public UserDataController(ILogger<UserDataController> logger, IUserDataRepository userDataRepistory, IUserCardRepository userCardRepistory , IConfiguration configuration, IFaceRepository faceRepository)
         {
             _logger = logger;
             _userDataRepository = userDataRepistory;
             _userCardRepistory = userCardRepistory;
             _configuration = configuration;
+            _faceRepository = faceRepository;
         }
         [HttpGet]
         public IActionResult List()
@@ -42,8 +44,35 @@ namespace UserData_webapi.Controllers
             }
             return Ok(_userDataRepository.Find(ID));
         }
+        [HttpGet("GetPersonGroupsListAsync")]
+        public async Task<IActionResult> GetPersonGroupsListAsync()
+        {
+            try
+            {
+
+                return Ok(await _faceRepository.GetPersonGroupsListAsync());
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpPost("persongroup/{GroupName}")]
+        public async Task<IActionResult> CreatepersongroupID(string GroupName)
+        {
+            try
+            {
+                string personGroupId = await _faceRepository.CreatePersonGroupAsync(GroupName);
+                return Ok(personGroupId);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
         [HttpPost]
-        public IActionResult Create([FromBody] UserData item)
+        public async Task<IActionResult> Create([FromBody] UserData item)
         { 
             try
             {
@@ -64,8 +93,15 @@ namespace UserData_webapi.Controllers
                 }
                 else
                 {
-                    _userDataRepository.Insert(item);
-                    linkline.sendlinenotify($"{_userDataRepository.getname(item.ID)}已註冊個人資料", "level2");
+                    foreach (var stream in item.Image)
+                    {
+                        if (await _faceRepository.GetFaceDetectAsync(stream.OpenReadStream()) != 1)
+                        {
+                            return BadRequest("image");
+                        }
+                    }
+                    await _userDataRepository.Insert(item);
+                    linkline.sendlinenotify($"{_userDataRepository.getchinesename(item.ID)}已註冊個人資料", "level2");
                 }
                 ;
             }
@@ -81,19 +117,13 @@ namespace UserData_webapi.Controllers
             try
             {
                 bool itemExistsID = _userDataRepository.DoesItemExistID(item.ID);
-                bool itemExistsfreeze = _userDataRepository.DoesItemExistfreeze(item.ID);
                 if (itemExistsID)
                 {
-                    if (itemExistsfreeze)
-                    {
-                        return BadRequest("freeze");
-                    }
                     _userDataRepository.Update(item);
                 }
                 else
                 {
                     return BadRequest("ID");
-
                 }
             }
             catch (Exception ex)
@@ -107,13 +137,17 @@ namespace UserData_webapi.Controllers
         {
             try
             {
-                var item = _userDataRepository.FindID(ID);
-                if (item == null)
+                bool itemExistsID = _userDataRepository.DoesItemExistID(ID);
+                if (itemExistsID)
+                {
+                    _userDataRepository.Delete(ID);
+                    _userCardRepistory.DeleteID(ID);
+                }
+                else
                 {
                     return BadRequest("ID");
                 }
-                _userDataRepository.Delete(ID);
-                _userCardRepistory.DeleteID(ID);
+
             }
             catch (Exception ex)
             {

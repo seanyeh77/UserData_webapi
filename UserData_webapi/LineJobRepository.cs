@@ -51,7 +51,7 @@ namespace UserData_webapi
                     Message = "學號      姓名　 凍結 狀態\n";
                     foreach (UserData data in _userDataRepository.All)
                     {
-                        Message += $"{data.ID.ToString("D6")}  {data.Name}  {(data.freeze?"是":"否")}   {(data.state ? "在教室":"離開")}\n";
+                        Message += $"{data.ID.ToString("D6")}  {data.ChineseName}  {(data.freeze?"是":"否")}   {(data.state ? "在教室":"離開")}\n";
                     }
                 }
             }
@@ -66,7 +66,7 @@ namespace UserData_webapi
                 {
                     UserData userData = _userDataRepository.FindID(Convert.ToInt32(ID));
                     Message = "學號      姓名　 凍結 狀態\n";
-                    Message += $"{userData.ID.ToString("D6")}  {userData.Name}  {(userData.freeze ? "是":"否")}   {(userData.state ? "在教室":"離開")}\n";
+                    Message += $"{userData.ID.ToString("D6")}  {userData.ChineseName}  {(userData.freeze ? "是":"否")}   {(userData.state ? "在教室":"離開")}\n";
                 }
                 
             }
@@ -199,7 +199,7 @@ namespace UserData_webapi
                 Message = "學號      姓名　 凍結 狀態\n";
                 foreach (UserData data in _userDataRepository.All.Where(x => x.state))
                 {
-                    Message += $"{data.ID.ToString("D6")}  {data.Name}  {(data.freeze ? "是" : "否")}   {(data.state ? "在教室" : "離開")}\n";
+                    Message += $"{data.ID.ToString("D6")}  {data.ChineseName}  {(data.freeze ? "是" : "否")}   {(data.state ? "在教室" : "離開")}\n";
                 }
             }
             return Message;

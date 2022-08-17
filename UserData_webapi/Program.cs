@@ -15,6 +15,7 @@ builder.Services.AddSingleton<ILineJobRespository, LineJobRepository>();
 builder.Services.AddSingleton<ILineBotManageRespository, LineManageRepository>();
 builder.Services.AddSingleton<IImageRepository, ImageRepository>();
 builder.Services.AddSingleton<IRechalRepository, RachelRepository>();
+builder.Services.AddSingleton<IFaceRepository, FaceRespository>();
 builder.Services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
 {
     builder.AllowAnyOrigin()

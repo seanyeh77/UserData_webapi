@@ -52,7 +52,7 @@ namespace UserData_webapi.Controllers
                 {
                     if (_userDataRepository.DoesItemExistfreeze(ID))
                     {
-                        linkline.sendlinenotify($"{_userDataRepository.getname(ID)}想開啟雷切機，但已被凍結", "level2");
+                        linkline.sendlinenotify($"{_userDataRepository.getchinesename(ID)}想開啟雷切機，但已被凍結", "level2");
                         return BadRequest("freeze");
                     }
                     else if (_userDataRepository.getstate(ID)) //判別此人簽到狀態
@@ -60,12 +60,12 @@ namespace UserData_webapi.Controllers
                         rachelstate.ID = ID;
                         rachelstate.state = true;
                         _rechalRepository.Update(rachelstate);
-                        linkline.sendlinenotify($"雷切機已被{_userDataRepository.getname(ID)}開啟", "level2");
+                        linkline.sendlinenotify($"雷切機已被{_userDataRepository.getchinesename(ID)}開啟", "level2");
                         return Ok("open");
                     }
                     else
                     {
-                        linkline.sendlinenotify($"{_userDataRepository.getname(ID)}尚未遷到想開啟雷切機", "level2");
+                        linkline.sendlinenotify($"{_userDataRepository.getchinesename(ID)}尚未遷到想開啟雷切機", "level2");
                         return BadRequest("state");
                     }
                 }

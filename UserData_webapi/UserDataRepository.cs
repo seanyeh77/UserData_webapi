@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
+using System;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -9,15 +12,18 @@ namespace UserData_webapi
         private List<UserData> _todoList;
         private string _file;
         private readonly IHostEnvironment _environment;
-
-        public UserDataRepository(IHostEnvironment environment)
+        private readonly IFaceRepository _faceRepository;
+        string imgfile = string.Empty;
+        public UserDataRepository(IHostEnvironment environment,IFaceRepository faceRepository)
         {
             _environment = environment;
+            _faceRepository = faceRepository;
             string json_dir = Path.Combine(_environment.ContentRootPath, "json");
             if (Directory.Exists(json_dir) == false)
                 Directory.CreateDirectory(json_dir);
-            string file = Path.Combine(_environment.ContentRootPath, "json", "User.json");
-            Init(file);
+            string jsonfile = Path.Combine(_environment.ContentRootPath, "json", "User.json");
+            imgfile = Path.Combine(_environment.ContentRootPath, "img");
+            Init(jsonfile);
         }
         private void SaveToFile()
         {
@@ -43,9 +49,9 @@ namespace UserData_webapi
             get { return _todoList; }
         }
 
-        public string getname(int id)
+        public string getchinesename(int id)
         {
-            return _todoList.FirstOrDefault(item => item.ID == id).Name;
+            return _todoList.FirstOrDefault(item => item.ID == id).ChineseName;
         }
         public bool DoesItemExistID(int id)
         {
@@ -71,9 +77,38 @@ namespace UserData_webapi
         {
             return _todoList.FirstOrDefault(item => item.ID == ID && item.freeze == false);
         }
-        public void Insert(UserData item)
+        public async Task Insert(UserData item)
         {
-            _todoList.Add(item);
+            Person person = await _faceRepository.CreatePersonGroupPersonAsync(item.ID);
+            IFormFile file = item.Image.First();
+            var filePath = Path.Combine(imgfile,item.ID.ToString(), file.FileName);
+            if (!File.Exists(filePath))
+            {
+                using (Stream fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(fileStream);
+                }
+            }
+            foreach (var formFile in item.Image)
+            {
+                PersistedFace face = await _faceRepository.AddPersonGroupPersonFaceAsync(person.PersonId, item.ChineseName, formFile.OpenReadStream());
+            }
+            await _faceRepository.TrainingPersonGroupAsync();
+            UserData userData = new UserData()
+            {
+                ID = item.ID,
+                ChineseName = item.ChineseName,
+                EnglishName = item.EnglishName,
+                grade = item.grade,
+                email = item.email,
+                gender = item.gender,
+                position = item.position,
+                view = item.view,
+                state = item.state,
+                freeze = item.freeze,
+                personID = person.PersonId,
+            };
+            _todoList.Add(userData);
             SaveToFile();
         }
         public void reset()
@@ -86,25 +121,35 @@ namespace UserData_webapi
         }
         public void Update(UserData item)
         {
-            var Name = this.FindID(item.ID);
-            var index = _todoList.IndexOf(Name);
-            if(item.Name == "null")
+            var ID = this.FindID(item.ID);
+            UserData userData = new UserData()
             {
-                item.Name = Name.Name;
-            }
-            if (item.grade == 500)
-            {
-                item.grade = Name.grade;
-            }
+                ID = item.ID,
+                ChineseName = item.ChineseName,
+                EnglishName = item.EnglishName,
+                grade = item.grade,
+                email = item.email,
+                gender = item.gender,
+                position = item.position,
+                view = item.view,
+                state = item.state,
+                freeze = item.freeze,
+                personID = ID.personID,
+            };
+            var index = _todoList.IndexOf(ID);
             _todoList.RemoveAt(index);
             _todoList.Insert(index, item);
             SaveToFile();
         }
 
-        public void Delete(int ID)
+        public async Task Delete(int ID)
         {
-            _todoList.Remove(FindID(ID));
+            UserData userData = Find(ID);
+            await _faceRepository.DeletePersonGroupPersonAsync(userData.personID);
+            DeleteDirectory(Path.Combine(imgfile, ID.ToString()));
+            _todoList.Remove(userData);
             SaveToFile();
+            await _faceRepository.TrainingPersonGroupAsync();
         }
         public void DeletefreezeID(int ID)
         {
@@ -130,6 +175,23 @@ namespace UserData_webapi
         public bool getstate(int ID)
         {
             return _todoList.FirstOrDefault(x => x.ID == ID).state;
+        }
+        /// <summary>
+        /// 刪除資料夾
+        /// </summary>
+        /// <param name="path"></param>
+        void DeleteDirectory(string path)
+        {
+            DirectoryInfo dir = new DirectoryInfo(path);
+            if (dir.Exists)
+            {
+                DirectoryInfo[] childs = dir.GetDirectories();
+                foreach (DirectoryInfo child in childs)
+                {
+                    child.Delete(true);
+                }
+                dir.Delete(true);
+            }
         }
     }
 }

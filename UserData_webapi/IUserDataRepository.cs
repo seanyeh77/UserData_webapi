@@ -2,7 +2,7 @@
 {
     public interface IUserDataRepository
     {
-        public string getname(int id);
+        public string getchinesename(int id);
         bool DoesItemExistID(int ID); 
         bool DoesItemExistfreeze(int ID);
         bool DoesItemExistfreezefalse(int ID);
@@ -11,9 +11,9 @@
         UserData FindID(int ID); 
         UserData Find(int ID);
         public void reset();
-        void Insert(UserData item);
+        Task Insert(UserData item);
         void Update(UserData item);
-        void Delete(int ID);
+        Task Delete(int ID);
         void DeletefreezeID(int ID);
         void DeletedisfreezeID(int ID);
         void changestate(int ID);
