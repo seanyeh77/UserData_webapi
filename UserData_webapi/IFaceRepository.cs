@@ -15,7 +15,7 @@ namespace UserData_webapi
         /// </summary>
         /// <param name="GroupName"></param>
         /// <returns></returns>
-        public Task<string> CreatePersonGroupAsync(string GroupName);
+        public Task<string> CreatePersonGroupAsync(string GroupName); 
         public Task<IList<PersonGroup>> GetPersonGroupsListAsync();
         /// <summary>
         /// 新增群組成員
