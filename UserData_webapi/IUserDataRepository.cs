@@ -2,7 +2,7 @@
 {
     public interface IUserDataRepository
     {
-        public string getname(int id);
+        public string getchinesename(int id);
         bool DoesItemExistID(int ID); 
         bool DoesItemExistfreeze(int ID);
         bool DoesItemExistfreezefalse(int ID);

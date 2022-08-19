@@ -48,7 +48,6 @@ namespace UserData_webapi
         {
             get { return _todoList; }
         }
-
         public string getchinesename(int id)
         {
             return _todoList.FirstOrDefault(item => item.ID == id).ChineseName;
@@ -93,7 +92,6 @@ namespace UserData_webapi
             {
                 PersistedFace face = await _faceRepository.AddPersonGroupPersonFaceAsync(person.PersonId, item.ChineseName, formFile.OpenReadStream());
             }
-            await _faceRepository.TrainingPersonGroupAsync();
             UserData userData = new UserData()
             {
                 ID = item.ID,
