@@ -10,7 +10,6 @@ namespace UserData_webapi.Controllers
     [Route("[controller]")]
     public class UserDataController : ControllerBase
     {
-        
         private readonly ILogger<UserDataController> _logger;
         private readonly IUserDataRepository _userDataRepository;
         private readonly IUserCardRepository _userCardRepistory;

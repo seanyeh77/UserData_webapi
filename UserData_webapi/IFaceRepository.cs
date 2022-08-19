@@ -1,7 +1,9 @@
 ﻿namespace UserData_webapi
 {
-    public interface IFaceRepository
+    interface IFaceRepository
     {
-
+        public void CreateFaceSet();
+        public void AddFaceAsync();
+        public void RemoveFaceAsync();
     }
 }
