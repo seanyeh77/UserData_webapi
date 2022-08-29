@@ -39,7 +39,7 @@ namespace UserData_webapi.Controllers
         [HttpGet("userdaylog")]
         public IActionResult getuserdaylog()
         {
-            var data1 = _userLogRepository.All.Where(x => x.time.Month == DateTime.Today.Month);
+            var data1 = _userLogRepository.UserLogs_All.Where(x => x.time.Month == DateTime.Today.Month);
             var data2 = from a in data1
                         join b in _userCardRepository.All on a.UID equals b.UID into c
                         from b in c.DefaultIfEmpty()
@@ -193,8 +193,8 @@ namespace UserData_webapi.Controllers
                                 }
                                 break;
                             default:
-                                Thread.Sleep(1000);
-                                _linkline.sendlinebot(item.replyToken, "收到的訊息類型為: \n" + receivedmessage.events.FirstOrDefault().message.type);
+                                //Thread.Sleep(1000);
+                                //_linkline.sendlinebot(item.replyToken, "收到的訊息類型為: \n" + receivedmessage.events.FirstOrDefault().message.type);
                                 break;
                         }
                         break;
@@ -210,11 +210,11 @@ namespace UserData_webapi.Controllers
                             item.replyToken,
                             $"frc打卡已被 \n{linename}\n加為好友",
                             $"歡迎{linename}加入",
-                            "level1");
+                            "level2");
                         break;
                     //LINE Bot 被用戶封鎖
                     case "unfollow":
-                        _linkline.sendlinenotify($"frc打卡已被\n {linename}\n封鎖", "level1");
+                        _linkline.sendlinenotify($"frc打卡已被\n {linename}\n封鎖", "level2");
                         _lineBotManageRespository.deluser(item.source.userId);
                         break;
                     //LINE Bot 被加入聊天室

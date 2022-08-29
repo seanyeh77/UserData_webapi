@@ -7,9 +7,9 @@ namespace UserData_webapi
         [Required]
         public string Name { get; set; }
         [Required]
-        public int ID { get; set; }
+        public string ID { get; set; }
         [Required]
-        public int grade { get; set; }
+        public int? grade { get; set; }
         [Required]
         public float monaverage { get; set; }
         [Required]

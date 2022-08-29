@@ -9,14 +9,20 @@ namespace UserData_webapi
 {
     public class ImageRepository : IImageRepository
     {
+        private readonly IConfiguration _configurgation;
+        public ImageRepository(IConfiguration configurgation)
+        {
+            _configurgation = configurgation;
+        }
+
         public async Task<List<string>> crawler()
         {
             List<string> imagesurls = new List<string>();
             string str1 = "";
             facebookimageclass? result = new facebookimageclass();
             Photos result1 = new Photos();
-            string access_token = "EAAIiUu1YtXIBAP7ItbrekMnIOl9wxRtkeg8aJMuDSsMoFvAvMlX3vGmlI1la7ixlqK4fEklnvpNKae3uMT9Jk4fTjgGaw2Sgy9RbQPw6neDYkuLETOrAyf6fM2Kh43HeV3h3U6aWZC7zoUCriZBMkgSnwWxs0dNf6E53JeSv5lI3U38Drh";
-            string url = $"https://graph.facebook.com/v14.0/131351872671363?fields=photos%7Bimages%7D&access_token={access_token}";
+            string access_token = _configurgation.GetSection("facebook:access_token").Value;
+            string url = $"{_configurgation.GetSection("facebook:urlphotoimage").Value}{access_token}";
             HttpClient client = new HttpClient() { BaseAddress = new Uri(url) };
             try
             {
@@ -54,8 +60,8 @@ namespace UserData_webapi
         public async Task<string> geticonurl()
         {
             iconurl? result = new iconurl();
-            string access_token = "EAAIiUu1YtXIBAP7ItbrekMnIOl9wxRtkeg8aJMuDSsMoFvAvMlX3vGmlI1la7ixlqK4fEklnvpNKae3uMT9Jk4fTjgGaw2Sgy9RbQPw6neDYkuLETOrAyf6fM2Kh43HeV3h3U6aWZC7zoUCriZBMkgSnwWxs0dNf6E53JeSv5lI3U38Drh";
-            string url = $"https://graph.facebook.com/v14.0/me?fields=picture%7Burl%7D&access_token={access_token}";
+            string access_token = _configurgation.GetSection("facebook:access_token").Value;
+            string url = $"{_configurgation.GetSection("facebook:urlimageBurl").Value}{access_token}";
             HttpClient client = new HttpClient() { BaseAddress = new Uri(url) };
             try
             {
@@ -74,8 +80,8 @@ namespace UserData_webapi
             string str1 = "";
             facebookimageclass? result = new facebookimageclass();
             Photos result1 = new Photos();
-            string access_token = "EAAIiUu1YtXIBAP7ItbrekMnIOl9wxRtkeg8aJMuDSsMoFvAvMlX3vGmlI1la7ixlqK4fEklnvpNKae3uMT9Jk4fTjgGaw2Sgy9RbQPw6neDYkuLETOrAyf6fM2Kh43HeV3h3U6aWZC7zoUCriZBMkgSnwWxs0dNf6E53JeSv5lI3U38Drh";
-            string url = $"https://graph.facebook.com/v14.0/183879410751942?fields=photos%7Bimages%7D&access_token={access_token}";
+            string access_token = _configurgation.GetSection("facebook:access_token").Value;
+            string url = $"{_configurgation.GetSection("facebook:urlphotosBimages").Value}{access_token}";
             HttpClient client = new HttpClient() { BaseAddress = new Uri(url) };
             try
             {
@@ -117,11 +123,11 @@ namespace UserData_webapi
             HtmlDocument doc = new HtmlDocument();
             if (language == "chinese")
             {
-                doc = webClient.Load("https://zh.wikipedia.org/zh-tw/FIRST%E6%9C%BA%E5%99%A8%E4%BA%BA%E7%AB%9E%E8%B5%9B"); //載入網址資料
+                doc = webClient.Load(_configurgation.GetSection("wikipedia:chinesse").Value); //載入網址資料
             }
             else if (language == "english")
             {
-                doc = webClient.Load("https://en.wikipedia.org/wiki/FIRST_Robotics_Competition"); //載入網址資料
+                doc = webClient.Load(_configurgation.GetSection("wikipedia:english").Value); //載入網址資料
             }
             HtmlNodeCollection data = doc.DocumentNode.SelectNodes("//*[@id=\"mw-content-text\"]/div[1]/p"); //抓取Xpath資料
             foreach (HtmlNode node in data)
@@ -143,8 +149,8 @@ namespace UserData_webapi
         {
             List<string> imagesurls = new List<string>();
             teamabout? result = new teamabout();
-            string access_token = "EAAIiUu1YtXIBAP7ItbrekMnIOl9wxRtkeg8aJMuDSsMoFvAvMlX3vGmlI1la7ixlqK4fEklnvpNKae3uMT9Jk4fTjgGaw2Sgy9RbQPw6neDYkuLETOrAyf6fM2Kh43HeV3h3U6aWZC7zoUCriZBMkgSnwWxs0dNf6E53JeSv5lI3U38Drh";
-            string url = $"https://graph.facebook.com/v14.0/me?fields=about,description&access_token={access_token}";
+            string access_token = _configurgation.GetSection("facebook:access_token").Value;
+            string url = $"{_configurgation.GetSection("facebook:urlaboutdescription").Value}{access_token}";
             HttpClient client = new HttpClient() { BaseAddress = new Uri(url) };
             try
             {

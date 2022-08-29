@@ -5,9 +5,11 @@
         IEnumerable<UserPoint> usertable(IUserCardRepository _userCardRepistory, IUserDataRepository _userDataRepository);
         bool DoesItemExist(string id);
         //public IEnumerable<UserPoint> usertable();
-        IEnumerable<UserLog> All { get; }
+        IEnumerable<UserLog> UserLogs_All { get; }
         UserLog FindUID(string id);
-        void Insert(UserLog item);
+        void UserLog_Insert(UserLog item);
+        void UserLogByFace_Insert(UserLogByFace item);
         void DeleteUIDAll(string id);
+        Task<List<UserData>> detect_face(IFormFile formFile);
     }
 }

@@ -25,7 +25,7 @@ namespace UserData_webapi.Controllers
             return Ok(_userCardRepistory.All);
         }
         [HttpGet("cardcount/{ID}")]
-        public IActionResult count(int ID)
+        public IActionResult count(string ID)
         {
             return Ok(_userCardRepistory.GetCount(ID));
         }
@@ -38,7 +38,7 @@ namespace UserData_webapi.Controllers
             {
                 return BadRequest("UID");
             }
-            int ID = _userCardRepistory.GetID(UID);
+            string ID = _userCardRepistory.GetID(UID);
             bool itemExistsID = _userDataRepository.DoesItemExistID(ID);
             bool itemExistsfreeze = _userDataRepository.DoesItemExistfreeze(ID);
             if (!itemExistsID)
@@ -52,11 +52,12 @@ namespace UserData_webapi.Controllers
             return Ok(_userDataRepository.Find(userCard.ID));
         }
         [HttpPost]
-        public IActionResult Create([FromBody] UserCard item)
+        public async Task<IActionResult> Create([FromBody] UserCard item)
         {
             try
             {
                 linkline linkline = new linkline(_configuration);
+                SendEmail sendEmail = new SendEmail(_configuration, _userDataRepository);
                 if (item == null || !ModelState.IsValid)
                 {
                     return BadRequest("null");
@@ -84,7 +85,9 @@ namespace UserData_webapi.Controllers
                 {
                     _userCardRepistory.Insert(item);
                 }
-                linkline.sendlinenotify($"{_userDataRepository.getname(item.ID)}已新增卡片", "level2");
+                string message = $"{_userDataRepository.getchinesename(item.ID)}已新增卡片";
+                await sendEmail.sendemail_id(item.ID, "卡片新增成功通知", message);
+                linkline.sendlinenotify(message, "level1");
             }
             catch (Exception ex)
             {
@@ -93,16 +96,18 @@ namespace UserData_webapi.Controllers
             return Ok(item);
         }
         [HttpDelete("{UID}")]
-        public IActionResult Delete(string UID)
+        public async Task<IActionResult> Delete(string UID)
         {
             try
             {
-                var item = _userCardRepistory.FindUIDfreezefalse(UID);
+                linkline linkline = new linkline(_configuration);
+                SendEmail sendEmail = new SendEmail(_configuration, _userDataRepository);
+                UserCard item = _userCardRepistory.FindUIDfreezefalse(UID);
                 if (item == null)
                 {
                     return BadRequest("null");
                 }
-                int ID = _userCardRepistory.GetID(UID);
+                string ID = item.ID;
                 bool itemExistsID = _userDataRepository.DoesItemExistID(ID);
                 bool itemExistsfreeze = _userDataRepository.DoesItemExistfreeze(ID);
                 if (!itemExistsID)
@@ -114,12 +119,15 @@ namespace UserData_webapi.Controllers
                     return BadRequest("freeze");
                 }
                 _userCardRepistory.DeletefreezeUID(UID);
+                string message = $"{_userDataRepository.getchinesename(item.ID)}已刪除卡片";
+                await sendEmail.sendemail_id(ID, "卡片成功刪除通知", message);
+                linkline.sendlinenotify(message, "level1");
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
-            return NoContent();
+            return Ok();
         }
     }
 }

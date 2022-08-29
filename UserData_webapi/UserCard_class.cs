@@ -5,7 +5,7 @@ namespace UserData_webapi
     public class UserCard
     {
         [Required]
-        public int ID { get; set; }
+        public string ID { get; set; }
 
         [Required]
         public string UID { get; set; }

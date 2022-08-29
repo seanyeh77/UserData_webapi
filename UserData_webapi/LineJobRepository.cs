@@ -51,22 +51,22 @@ namespace UserData_webapi
                     Message = "學號      姓名　 凍結 狀態\n";
                     foreach (UserData data in _userDataRepository.All)
                     {
-                        Message += $"{data.ID.ToString("D6")}  {data.Name}  {(data.freeze?"是":"否")}   {(data.state ? "在教室":"離開")}\n";
+                        Message += $"{data.ID}  {data.ChineseName}  {(data.freeze?"是":"否")}   {(data.state ? "在教室":"離開")}\n";
                     }
                 }
             }
             else
             {
-                bool itemExistsID = _userDataRepository.DoesItemExistID(Convert.ToInt32(ID));
+                bool itemExistsID = _userDataRepository.DoesItemExistID(ID);
                 if (!itemExistsID)
                 {
                     Message = $"沒有找到\n{ID}\n用戶";
                 }
                 else
                 {
-                    UserData userData = _userDataRepository.FindID(Convert.ToInt32(ID));
+                    UserData userData = _userDataRepository.FindID(ID);
                     Message = "學號      姓名　 凍結 狀態\n";
-                    Message += $"{userData.ID.ToString("D6")}  {userData.Name}  {(userData.freeze ? "是":"否")}   {(userData.state ? "在教室":"離開")}\n";
+                    Message += $"{userData}  {userData.ChineseName}  {(userData.freeze ? "是":"否")}   {(userData.state ? "在教室":"離開")}\n";
                 }
                 
             }
@@ -74,7 +74,7 @@ namespace UserData_webapi
         }
         public string freeze(string ID)
         {
-            var data = _userDataRepository.FindID(Convert.ToInt32(ID));
+            var data = _userDataRepository.FindID(ID);
             if (data == null)
             {
                 Message = $"沒有找到{ID}用戶";
@@ -86,7 +86,7 @@ namespace UserData_webapi
             }
             else
             {
-                _userDataRepository.DeletefreezeID(Convert.ToInt32(ID));
+                _userDataRepository.DeletefreezeID(ID);
                 Message = $"{ID}\n已被凍結";
                 _linkline.sendlinenotify(Message, "level2");
             }
@@ -94,7 +94,7 @@ namespace UserData_webapi
         }
         public string disfreeze(string ID)
         {
-            var data = _userDataRepository.FindID(Convert.ToInt32(ID));
+            var data = _userDataRepository.FindID(ID);
             if (data == null)
             {
                 Message = "沒有找到此用戶";
@@ -106,7 +106,7 @@ namespace UserData_webapi
             }
             else
             {
-                _userDataRepository.DeletedisfreezeID(Convert.ToInt32(ID));
+                _userDataRepository.DeletedisfreezeID(ID);
                 Message = $"{ID}\n已被解除凍結";
                 _linkline.sendlinenotify(Message, "level2");
             }
@@ -199,7 +199,7 @@ namespace UserData_webapi
                 Message = "學號      姓名　 凍結 狀態\n";
                 foreach (UserData data in _userDataRepository.All.Where(x => x.state))
                 {
-                    Message += $"{data.ID.ToString("D6")}  {data.Name}  {(data.freeze ? "是" : "否")}   {(data.state ? "在教室" : "離開")}\n";
+                    Message += $"{data.ID}  {data.ChineseName}  {(data.freeze ? "是" : "否")}   {(data.state ? "在教室" : "離開")}\n";
                 }
             }
             return Message;

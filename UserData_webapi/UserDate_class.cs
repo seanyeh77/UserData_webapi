@@ -5,13 +5,15 @@ namespace UserData_webapi
     /// <summary>
     /// 使用者資料
     /// </summary>
-    public class UserData
+    public class UserData        
     {
+        
+
         /// <summary>
         /// UserID
         /// </summary>
         [Required]
-        public int ID { get; set; }
+        public string ID { get; set; }
         /// <summary>
         /// 中文姓名
         /// </summary>
@@ -49,8 +51,7 @@ namespace UserData_webapi
         /// <summary>
         /// 臉部照片檔案
         /// </summary>
-        [Required]
-        public List<IFormFile> Image { get; set; }
+        public List<IFormFile>? Image { get; set; }
         /// <summary>
         /// 狀態
         /// </summary>
@@ -62,6 +63,22 @@ namespace UserData_webapi
         /// <summary>
         /// 群組人臉ID
         /// </summary>
-        public Guid personID { get; set; }
+        public List<string> face_tokens { get; set; } = new List<string>();
+        public string url { get; set; } = "";
+
+        public UserData CopyTo()
+        {
+            UserData userData1 = new UserData();
+            userData1.ID = this.ID;
+            userData1.ChineseName = this.ChineseName;
+            userData1.EnglishName = this.EnglishName;
+            userData1.position = this.position;
+            userData1.state = this.state;
+            userData1.email = this.email;
+            userData1.view = this.view;
+            userData1.gender = this.gender;
+            userData1.grade = this.grade;
+            return userData1;
+        }
     }
 }

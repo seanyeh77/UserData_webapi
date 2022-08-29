@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using Microsoft.CognitiveServices.Speech.Transcription;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 
@@ -6,44 +7,74 @@ namespace UserData_webapi
 {
     public class UserLogRepository : IUserLogRepository
     {
-        private List<UserLog> _todoList;
-        private string _file;
+        private List<UserLog> UserLogs;
+        private List<UserLogByFace> UserLogByFaces;
+        private string _fileUserLog;
+        private string _fileUserLogByFace;
         private readonly IHostEnvironment _environment;
         private readonly IUserDataRepository _userDataRepository;
+        private readonly IFaceRepository _faceRepository;
 
-        public UserLogRepository(IHostEnvironment environment, IUserDataRepository userDataRepistory)
+        public UserLogRepository(IHostEnvironment environment, IUserDataRepository userDataRepistory,IFaceRepository faceRepository)
         {
             _environment = environment;
             string json_dir = Path.Combine(_environment.ContentRootPath, "json");
             if (Directory.Exists(json_dir) == false)
                 Directory.CreateDirectory(json_dir);
-            string file = Path.Combine(_environment.ContentRootPath, "json", "UserLog.json");
-            Init(file);
+            string UserLog_file = Path.Combine(_environment.ContentRootPath, "json", "UserLog.json");
+            string UserLogByFace_file = Path.Combine(_environment.ContentRootPath, "json", "UserLogByFace.json");
+            InitUserLog(UserLog_file);
+            InitUserLogByFace(UserLogByFace_file);
             _userDataRepository = userDataRepistory;
+            _faceRepository = faceRepository;
         }
-        private void SaveToFile()
+        private void SaveToFile_UserLog()
         {
-            string json = JsonSerializer.Serialize<IList<UserLog>>(_todoList);
-            File.WriteAllText(_file, json, Encoding.UTF8);
+            string json = JsonSerializer.Serialize<IList<UserLog>>(UserLogs);
+            File.WriteAllText(_fileUserLog, json, Encoding.UTF8);
         }
-        public void Init(string file)
+        private void SaveToFile_UserLogByFace()
+        {
+            string json = JsonSerializer.Serialize<IList<UserLogByFace>>(UserLogByFaces);
+            File.WriteAllText(_fileUserLogByFace, json, Encoding.UTF8);
+        }
+        public void InitUserLog(string file)
         {
             //file=Path.
-            _file = file;
+            _fileUserLog = file;
             string json = "";
             if (File.Exists(file))
             {
                 json = File.ReadAllText(file, Encoding.UTF8);
-                _todoList = JsonSerializer.Deserialize<List<UserLog>>(json);
+                UserLogs = JsonSerializer.Deserialize<List<UserLog>>(json);
             }
             else
             {
-                _todoList = new List<UserLog>();
+                UserLogs = new List<UserLog>();
             }
         }
-        public IEnumerable<UserLog> All
+        public void InitUserLogByFace(string file)
         {
-            get { return _todoList; }
+            //file=Path.
+            _fileUserLogByFace = file;
+            string json = "";
+            if (File.Exists(file))
+            {
+                json = File.ReadAllText(file, Encoding.UTF8);
+                UserLogByFaces = JsonSerializer.Deserialize<List<UserLogByFace>>(json);
+            }
+            else
+            {
+                UserLogByFaces = new List<UserLogByFace>();
+            }
+        }
+        public IEnumerable<UserLog> UserLogs_All
+        {
+            get { return UserLogs; }
+        }
+        public IEnumerable<UserLogByFace> UserLogByFaces_All
+        {
+            get { return UserLogByFaces; }
         }
         public IEnumerable<UserPoint> usertable(IUserCardRepository _userCardRepistory, IUserDataRepository _userDataRepository)
         {
@@ -54,9 +85,9 @@ namespace UserData_webapi
             var quary = from x in _userDataRepository.All
                         join y in _userCardRepistory.All on x.ID equals y.ID into xy
                         from y in xy.DefaultIfEmpty()
-                        join z in _todoList on y == null ? "" : y.UID equals z.UID into yz
+                        join z in UserLogs on y == null ? "" : y.UID equals z.UID into yz
                         from z in yz.DefaultIfEmpty()
-                        select new alluserdata { ID = x.ID, Name = x.Name, grade = x.grade, UID = y == null ? "" : y.UID, Time = z == null ? new DateTime() : z.time, Freeze = x.freeze };
+                        select new alluserdata { ID = x.ID, Name = x.ChineseName, grade = x.grade, UID = y == null ? "" : y.UID, Time = z == null ? new DateTime() : z.time, Freeze = x.freeze };
             quary = from x in quary
                         // 暑假時段(只到21點)
                     where (((int)x.Time.Month ==7 || (int)x.Time.Month == 8) && x.Time.Hour <= afterafternoon)
@@ -131,7 +162,7 @@ namespace UserData_webapi
                              select new UserPoint
                              {
                                  ID = a.ID,
-                                 Name = a.Name,
+                                 Name = a.ChineseName,
                                  grade = a.grade,
                                  state = a.state,
                                  monaverage = b == null ? new float() : b.monaverage,
@@ -143,32 +174,45 @@ namespace UserData_webapi
         }
         public bool DoesItemExist(string UID)
         {
-            return _todoList.Any(item => item.UID == UID);
+            return UserLogs.Any(item => item.UID == UID);
         }
 
         public UserLog FindUID(string UID)
         {
-            return _todoList.FirstOrDefault(item => item.UID == UID);
+            return UserLogs.FirstOrDefault(item => item.UID == UID);
         }
-        public void Insert(UserLog item)
+        public void UserLog_Insert(UserLog item)
         {
-            _todoList.Add(item);
-            SaveToFile();
+            UserLogs.Add(item);
+            SaveToFile_UserLog();
         }
-
-        public void Update(UserLog item)
+        public void UserLogByFace_Insert(UserLogByFace item)
         {
-            var Name = this.FindUID(item.UID);
-            var index = _todoList.IndexOf(Name);
-            _todoList.RemoveAt(index);
-            _todoList.Insert(index, item);
-            SaveToFile();
+            UserLogByFaces.Add(item);
+            SaveToFile_UserLogByFace();
         }
-
         public void DeleteUIDAll(string UID)
         {
-            _todoList.RemoveAll(x => x.UID == UID);
-            SaveToFile();
+            UserLogs.RemoveAll(x => x.UID == UID);
+            SaveToFile_UserLog();
+        }
+        public async Task<List<UserData>> detect_face(IFormFile formFile)
+        {
+            List<SearchUser> searchUsers = await _faceRepository.SearchUser(formFile);
+            List<UserData> userDatas = new List<UserData>();
+            if (searchUsers != null)
+            {
+                foreach (var searchUser in searchUsers)
+                {
+                    var item = _userDataRepository.All.FirstOrDefault(item => item.face_tokens.Count(x => x == ((searchUser.results.First().confidence >= 75) ? searchUser.results.First().face_token : "")) > 0);
+                    if (item != null) userDatas.Add(item);
+                }
+            }
+            if (userDatas != null)
+            {
+                return userDatas;
+            }
+            return null;
         }
     }
 }

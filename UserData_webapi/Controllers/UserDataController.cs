@@ -14,7 +14,7 @@ namespace UserData_webapi.Controllers
         private readonly IUserDataRepository _userDataRepository;
         private readonly IUserCardRepository _userCardRepistory;
         private readonly IConfiguration _configuration;
-        public UserDataController(ILogger<UserDataController> logger, IUserDataRepository userDataRepistory, IUserCardRepository userCardRepistory ,IConfiguration configuration)
+        public UserDataController(ILogger<UserDataController> logger, IUserDataRepository userDataRepistory, IUserCardRepository userCardRepistory, IConfiguration configuration)
         {
             _logger = logger;
             _userDataRepository = userDataRepistory;
@@ -26,33 +26,36 @@ namespace UserData_webapi.Controllers
         {
             return Ok(_userDataRepository.All);
         }
-        [HttpGet("{ID}")]
-        public IActionResult List(int ID)
+        [HttpGet("ID")]
+        public IActionResult ListID()
         {
-            bool itemExistsID = _userDataRepository.DoesItemExistID(ID);
-            bool itemExistsfreeze = _userDataRepository.DoesItemExistfreeze(ID);
-            if (!itemExistsID)
-            {
-                return BadRequest("ID");
-            }
-            if (itemExistsfreeze)
-            {
-                return BadRequest("freeze");
-            }
+            return Ok(_userDataRepository.All.Select(p => p.ID).ToList());
+        }
+        [HttpGet("{ID}")]
+        public IActionResult List(string ID)
+        {
             return Ok(_userDataRepository.Find(ID));
         }
+        [HttpGet("position/{position}")]
+        public async Task<IActionResult> ListPosition(string position)
+        {
+            //var item = await _userDataRepository.GetUserData_poistion(position, GetCompleteUrl());
+            //return Ok(item);
+            return Ok();
+        }
         [HttpPost]
-        public IActionResult Create([FromBody] UserData item)
-        { 
+        public async Task<IActionResult> Create([FromForm(Name = "userdata")] UserData userdata)
+        {
             try
             {
                 linkline linkline = new linkline(_configuration);
-                if (item == null || !ModelState.IsValid)
+                SendEmail sendEmail = new SendEmail(_configuration, _userDataRepository);
+                if (userdata == null || !ModelState.IsValid)
                 {
                     return BadRequest("null");
                 }
-                bool itemExistsID = _userDataRepository.DoesItemExistID(item.ID);
-                bool itemExistsfreeze = _userDataRepository.DoesItemExistfreeze(item.ID);
+                bool itemExistsID = _userDataRepository.DoesItemExistID(userdata.ID);
+                bool itemExistsfreeze = _userDataRepository.DoesItemExistfreeze(userdata.ID);
                 if (itemExistsID)
                 {
                     if (itemExistsfreeze)
@@ -63,31 +66,58 @@ namespace UserData_webapi.Controllers
                 }
                 else
                 {
-                    _userDataRepository.Insert(item);
-                    linkline.sendlinenotify($"{_userDataRepository.getname(item.ID)}已註冊個人資料", "level2");
+                    int count = await _userDataRepository.Insert(userdata);
+                    string message = $"{_userDataRepository.getchinesename(userdata.ID)}成功註冊個人資料\n成功加入了{count}張照片";
+                    await sendEmail.sendemail_id(userdata.ID, "成功註冊通知", message);
+                    linkline.sendlinenotify(message, "level2");
                 }
-                ;
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
-            return Ok(item);
+            return Ok(userdata);
         }
-        [HttpPut]
-        public IActionResult Edit([FromBody] UserData item)
+        [HttpPost("detectimg")]
+        public async Task<IActionResult> EditUserDataDetectImage([FromForm(Name = "image")] IFormFile image)
         {
             try
             {
-                bool itemExistsID = _userDataRepository.DoesItemExistID(item.ID);
-                bool itemExistsfreeze = _userDataRepository.DoesItemExistfreeze(item.ID);
+                if (image == null)
+                {
+                    return BadRequest("null");
+                }
+                UserData userdata = await _userDataRepository.SearchUser(image);
+                if (userdata == null)
+                {
+                    return BadRequest("face");
+                }
+                return Ok(userdata);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpPut]
+        public async Task<IActionResult> Edit([FromForm(Name = "userdata")] UserData userdata)
+        {
+            try
+            {
+                linkline linkline = new linkline(_configuration);
+                SendEmail sendEmail = new SendEmail(_configuration, _userDataRepository);
+                bool itemExistsID = _userDataRepository.DoesItemExistID(userdata.ID);
+                bool itemExistsfreeze = _userDataRepository.DoesItemExistfreeze(userdata.ID);
                 if (itemExistsID)
                 {
                     if (itemExistsfreeze)
                     {
                         return BadRequest("freeze");
                     }
-                    _userDataRepository.Update(item);
+                    _userDataRepository.Update(userdata);
+                    string message = $"{_userDataRepository.getchinesename(userdata.ID)}成功修改了個人資料";
+                    await sendEmail.sendemail_id(userdata.ID, "成功修改通知", message);
+                    linkline.sendlinenotify(message, "level2");
                 }
                 else
                 {
@@ -99,56 +129,68 @@ namespace UserData_webapi.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            return NoContent();
+            return Ok();
         }
         [HttpDelete("{ID}")]
-        public IActionResult Delete(int ID)
+        public async Task<IActionResult> Delete(string ID)
         {
             try
             {
+                linkline linkline = new linkline(_configuration);
+                SendEmail sendEmail = new SendEmail(_configuration, _userDataRepository);
                 var item = _userDataRepository.FindID(ID);
                 if (item == null)
                 {
                     return BadRequest("ID");
                 }
-                _userDataRepository.Delete(ID);
+                string message = $"{_userDataRepository.getchinesename(ID)}成功刪除了個人資料";
+                await sendEmail.sendemail_id(ID, "成功刪除通知", message);
+                await _userDataRepository.Delete(ID);
+                linkline.sendlinenotify(message, "level2");
                 _userCardRepistory.DeleteID(ID);
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
-            return NoContent();
+            return Ok();
         }
         [HttpDelete("freeze/{ID}")]
-        public IActionResult freeze(int ID)
+        public async Task<IActionResult> freeze(string ID)
         {
             try
             {
+                linkline linkline = new linkline(_configuration);
+                SendEmail sendEmail = new SendEmail(_configuration, _userDataRepository);
                 var item = _userDataRepository.FindID(ID);
                 if (item == null)
                 {
                     return BadRequest("ID");
                 }
                 bool itemExistsfreeze = _userDataRepository.DoesItemExistfreeze(item.ID);
-                if( itemExistsfreeze)
+                if (itemExistsfreeze)
                 {
                     return BadRequest("freeze");
                 }
                 _userDataRepository.DeletefreezeID(ID);
+                string message = $"{_userDataRepository.getchinesename(ID)}已被凍結";
+                await sendEmail.sendemail_id(ID, "凍結通知", message);
+                linkline.sendlinenotify(message, "level2");
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
-            return NoContent();
+            return Ok();
         }
         [HttpDelete("disfreeze/{ID}")]
-        public IActionResult disfreeze(int ID)
+        public async Task<IActionResult> disfreeze(string ID)
         {
             try
             {
-                var item = _userDataRepository.FindID(ID);
+                linkline linkline = new linkline(_configuration);
+                SendEmail sendEmail = new SendEmail(_configuration, _userDataRepository);
+                UserData item = _userDataRepository.FindID(ID);
                 if (item == null)
                 {
                     return BadRequest("ID");
@@ -159,12 +201,29 @@ namespace UserData_webapi.Controllers
                     return BadRequest("disfreeze");
                 }
                 _userDataRepository.DeletedisfreezeID(ID);
+                string message = $"{_userDataRepository.getchinesename(ID)}已被解除凍結";
+                await sendEmail.sendemail_id(ID, "解除凍結通知", message);
+                linkline.sendlinenotify(message, "level2");
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
-            return NoContent();
+            return Ok();
         }
+        /// <summary>
+        /// 獲取當前請求完整的Url地址
+        /// </summary>
+        /// <returns></returns>
+        //private string GetCompleteUrl()
+        //{
+        //    return new StringBuilder()
+        //         .Append(HttpContext.Request.Scheme)
+        //         .Append("://")
+        //         .Append(HttpContext.Request.Host)
+        //         .Append(HttpContext.Request.PathBase)
+        //         .Append(HttpContext.Request.QueryString)
+        //         .ToString();
+        //}
     }
 }

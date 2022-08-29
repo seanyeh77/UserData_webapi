@@ -14,6 +14,7 @@ namespace UserData_webapi
         public UserCardRepository(IHostEnvironment environment,IUserLogRepository userLogRepistory)
         {
             _environment = environment;
+            _userLogRepistory = userLogRepistory;
             string json_dir = Path.Combine(_environment.ContentRootPath, "json");
             if (Directory.Exists(json_dir) == false)
                 Directory.CreateDirectory(json_dir);
@@ -44,16 +45,16 @@ namespace UserData_webapi
         {
             get { return _todoList; }
         }
-        public int GetID(string UID)
+        public string GetID(string UID)
         {
             var user =  _todoList.Where(x => x.UID == UID).ToList();
-            if (user.Count == 0)
+            if (!user.Any())
             {
-                return 0;
+                return "";
             }
             return user[0].ID;
         }
-        public int GetCount(int ID)
+        public int GetCount(string ID)
         {
             return _todoList.Count(x =>x.ID==ID&&!x.freeze);
         }
@@ -86,7 +87,7 @@ namespace UserData_webapi
             _todoList.Insert(index, item);
             SaveToFile();
         }
-        public void DeleteID(int ID)
+        public void DeleteID(string ID)
         {
             foreach (var item in _todoList.Where(x => x.ID == ID))
             {

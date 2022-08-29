@@ -2,21 +2,23 @@
 {
     public interface IUserDataRepository
     {
-        public string getchinesename(int id);
-        bool DoesItemExistID(int ID); 
-        bool DoesItemExistfreeze(int ID);
-        bool DoesItemExistfreezefalse(int ID);
-        public bool getIDstate(int ID);
+        public Task<List<UserData>> GetUserData_poistion(string position,string url);
+        public string getchinesename(string id);
+        bool DoesItemExistID(string ID);
+        bool DoesItemExistfreeze(string ID);
+        bool DoesItemExistfreezefalse(string ID);
         IEnumerable<UserData> All { get; }
-        UserData FindID(int ID); 
-        UserData Find(int ID);
+        UserData FindID(string ID);
+        UserData Find(string ID);
         public void reset();
-        void Insert(UserData item);
+        public Task<int> Insert(UserData item);
         void Update(UserData item);
-        void Delete(int ID);
-        void DeletefreezeID(int ID);
-        void DeletedisfreezeID(int ID);
-        void changestate(int ID);
-        bool getstate(int ID);
+        Task<int> Delete(string ID);
+        void DeletefreezeID(string ID);
+        void DeletedisfreezeID(string ID);
+        void changestate(string ID);
+        bool getstate(string ID);
+        public Task<UserData> SearchUser(IFormFile formFile);
+        public string getemail(string ID);
     }
 }

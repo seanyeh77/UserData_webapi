@@ -9,5 +9,6 @@ namespace UserData_webapi
 
         [Required]
         public DateTime time { get; set; }
+        public bool state { get; set; }
     }
 }
