@@ -10,6 +10,6 @@
         void UserLog_Insert(UserLog item);
         void UserLogByFace_Insert(UserLogByFace item);
         void DeleteUIDAll(string id);
-        Task<List<UserData>> detect_face(IFormFile formFile);
+        Task<(List<UserData>, int)> detect_face(IFormFile formFile);
     }
 }

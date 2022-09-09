@@ -46,5 +46,12 @@ namespace UserData_webapi
 
             await smtpClient.SendMailAsync(mail);
         }
+        public async Task sendalluser(string subject, string message)
+        {
+            foreach(UserData userData in _userDataRepository.All)
+            {
+                await sendemail_id(userData.ID, subject, message);
+            }
+        }
     }
 }

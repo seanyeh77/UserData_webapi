@@ -53,7 +53,7 @@ namespace UserData_webapi.Controllers
                         join b in _userDataRepository.All on a.ID equals b.ID
                         select new Userlogdataprint
                         {
-                            Name = b.ChineseName,
+                            ChineseName = b.ChineseName,
                             Time = a.time
                         };
             return Ok(data3);
@@ -94,12 +94,14 @@ namespace UserData_webapi.Controllers
             return Ok();
         }
         [HttpGet]
-        public IActionResult timerun()
+        public async Task<IActionResult> timerun()
         {
             try
             {
-                _linkline.sendlinenotify($"{DateTime.Now.ToString()}排程查詢了已簽到狀態", "level2");
-                _linkline.sendlinenotify(_jobRespository.state(), "level2");
+                SendEmail sendEmail = new SendEmail(_configuration, _userDataRepository);
+                string message = _jobRespository.state();
+                await sendEmail.sendalluser("簽到通知", message);
+                _linkline.sendlinenotify(message, "level2");
             }
             catch (Exception ex)
             {

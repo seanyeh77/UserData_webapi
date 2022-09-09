@@ -196,9 +196,14 @@ namespace UserData_webapi
             UserLogs.RemoveAll(x => x.UID == UID);
             SaveToFile_UserLog();
         }
-        public async Task<List<UserData>> detect_face(IFormFile formFile)
+        public async Task<(List<UserData>,int)> detect_face(IFormFile formFile)
         {
-            List<SearchUser> searchUsers = await _faceRepository.SearchUser(formFile);
+            List<string> face_tokes = await _faceRepository.DetictFace(formFile);
+            if (!face_tokes.Any())
+            {
+                return (null, 0);//找不到人臉
+            }
+            List<SearchUser> searchUsers = await _faceRepository.SearchUser(face_tokes);
             List<UserData> userDatas = new List<UserData>();
             if (searchUsers != null)
             {
@@ -208,11 +213,18 @@ namespace UserData_webapi
                     if (item != null) userDatas.Add(item);
                 }
             }
-            if (userDatas != null)
+            else
             {
-                return userDatas;
+                return (null, 3);//與Face++連線時出現問題
             }
-            return null;
+            if (userDatas.Any())
+            {
+                return (userDatas,2);//找到人臉也找到人
+            }
+            else
+            {
+                return (userDatas, 1);//找到人臉但找不到人
+            }
         }
     }
 }

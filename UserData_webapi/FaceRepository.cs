@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System.Globalization;
+using System.Net.Http;
 using System.Text;
 
 namespace UserData_webapi
@@ -34,10 +35,10 @@ namespace UserData_webapi
             dictionary.Add("api_secret", apiSecret);            
             dictionary.Add("image_base64", Convert.ToBase64String(ToByteArray(sf)));
             var content = new FormUrlEncodedContent(dictionary);
-            //string end_point = _configuration.GetSection("face++:Detect").Value;
             HttpResponseMessage response = await _httpClient.PostAsync("", content);
             if (!response.IsSuccessStatusCode)
             {
+                string str = await response.Content.ReadAsStringAsync();
                 return null;
             }
             var json  = await response.Content.ReadFromJsonAsync<Detectjson>();
@@ -48,38 +49,39 @@ namespace UserData_webapi
             }
             return faces_token_list;
         }
-        public async Task<List<SearchUser>> SearchUser(IFormFile formFile)
+        public async Task<List<SearchUser>> SearchUser(List<string> face_tokes)
         {
-            List<string> face_tokes = await DetictFace(formFile);
-            List<SearchUser> searchUsers = new List<SearchUser>();
-            if (face_tokes.Count() == 0)
+            try
+            {
+                List<SearchUser> searchUsers = new List<SearchUser>();
+                if (!face_tokes.Any())
+                {
+                    return null;
+                }
+                _httpClient = new HttpClient() { BaseAddress = new Uri(_configuration.GetSection("face++:url").Value + _configuration.GetSection("face++:Search").Value) };
+                foreach (var face in face_tokes)
+                {
+                    Dictionary<String, String> dictionary = new Dictionary<string, string>();
+                    string apiKey = _configuration.GetSection("face++:API Key").Value;
+                    string apiSecret = _configuration.GetSection("face++:API Secret").Value;
+                    dictionary.Add("api_key", apiKey);
+                    dictionary.Add("api_secret", apiSecret);
+                    dictionary.Add("faceset_token", _configuration.GetSection("face++:faceset_token").Value);
+                    dictionary.Add("face_token", face);
+                    var content = new FormUrlEncodedContent(dictionary);
+                    //string end_point = _configuration.GetSection("face++:Detect").Value;
+                    HttpResponseMessage response = await _httpClient.PostAsync("", content);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        searchUsers.Add(await response.Content.ReadFromJsonAsync<SearchUser>());
+                    }
+                }
+                return searchUsers;
+            }
+            catch
             {
                 return null;
             }
-            _httpClient = new HttpClient() { BaseAddress = new Uri(_configuration.GetSection("face++:url").Value + _configuration.GetSection("face++:Search").Value) };
-            foreach (var face in face_tokes)
-            {
-                Dictionary<String, String> dictionary = new Dictionary<string, string>();
-                string apiKey = _configuration.GetSection("face++:API Key").Value;
-                string apiSecret = _configuration.GetSection("face++:API Secret").Value;
-                Stream sf = formFile.OpenReadStream();
-                dictionary.Add("api_key", apiKey);
-                dictionary.Add("api_secret", apiSecret);
-                dictionary.Add("faceset_token", _configuration.GetSection("face++:faceset_token").Value);
-                dictionary.Add("face_token", face);
-                var content = new FormUrlEncodedContent(dictionary);
-                //string end_point = _configuration.GetSection("face++:Detect").Value;
-                HttpResponseMessage response = await _httpClient.PostAsync("", content);
-                if (response.IsSuccessStatusCode)
-                {
-                    searchUsers.Add(await response.Content.ReadFromJsonAsync<SearchUser>());
-                }
-            }
-            if (searchUsers.Count>0)
-            {
-                return searchUsers;
-            }
-            return null;
         }
         //public Task CreateFaceSet()
         //{

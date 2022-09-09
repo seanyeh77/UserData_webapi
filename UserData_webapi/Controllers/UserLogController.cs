@@ -31,7 +31,7 @@ namespace UserData_webapi.Controllers
         {
             return Ok(_userLogRepistory.UserLogs_All);
         }
-        [HttpGet("table/")]
+        [HttpGet("table")]
         public IActionResult Listtable()
         {
             return Ok(_userLogRepistory.usertable(_userCardRepistory, _userDataRepository));
@@ -86,36 +86,46 @@ namespace UserData_webapi.Controllers
             {
                 linkline linkline = new linkline(_configuration);
                 SendEmail sendEmail = new SendEmail(_configuration, _userDataRepository);
-                List<UserData> userDatas = await _userLogRepistory.detect_face(userdata);
-                if (userDatas.Any())
+                (List<UserData>,int) userDatas = await _userLogRepistory.detect_face(userdata);
+                switch (userDatas.Item2)
                 {
-                    foreach(string userID in userDatas.Select(x => x.ID))
-                    {
-                        UserLogByFace userLogByFace = new UserLogByFace();
-                        if (_userDataRepository.DoesItemExistfreezefalse(userID))
+                    case 0://找不到人臉
+                        return Ok("face");
+                        break;
+                    case 1://找到人臉但找不到人
+                        return Ok("people");
+                        break;
+                    case 2://找到人臉也找到人
+                        foreach (string userID in userDatas.Item1.Select(x => x.ID))
                         {
-                            userLogByFace.ID = userID;
-                            userLogByFace.time = DateTime.Now;
-                            userLogByFace.state = (state=="in"?true:false);
-                            _userLogRepistory.UserLogByFace_Insert(userLogByFace);
-                            _userDataRepository.All.FirstOrDefault(x=>x.ID==userID).state = userLogByFace.state;
-                            string message = $"{_userDataRepository.getchinesename(userID)}已{(userLogByFace.state ? "簽到" : "簽退")}({userID})";
-                            await sendEmail.sendemail_id(userID, "成功打卡通知", message);
-                            linkline.sendlinenotify(message, "level1");
+                            UserLogByFace userLogByFace = new UserLogByFace();
+                            if (_userDataRepository.DoesItemExistfreezefalse(userID))
+                            {
+                                userLogByFace.ID = userID;
+                                userLogByFace.time = DateTime.Now;
+                                userLogByFace.state = (state == "in" ? true : false);
+                                _userLogRepistory.UserLogByFace_Insert(userLogByFace);
+                                _userDataRepository.All.FirstOrDefault(x => x.ID == userID).state = userLogByFace.state;
+                                string message = $"{_userDataRepository.getchinesename(userID)}已{(userLogByFace.state ? "簽到" : "簽退")}({userID})";
+                                await sendEmail.sendemail_id(userID, "成功打卡通知", message);
+                                linkline.sendlinenotify(message, "level1");
+                            }
+                            else
+                            {
+                                string message = $"{_userDataRepository.getchinesename(userID)}想要{(userLogByFace.state ? "簽到" : "簽退")}({userID})\n但被結凍";
+                                await sendEmail.sendemail_id(userID, "打卡失敗通知", message);
+                                linkline.sendlinenotify(message, "level1");
+                                return BadRequest("freeze");
+                            }
                         }
-                        else
-                        {
-                            string message = $"{_userDataRepository.getchinesename(userID)}想要{(userLogByFace.state ? "簽到" : "簽退")}({userID})\n但被結凍";
-                            await sendEmail.sendemail_id(userID, "打卡失敗通知", message);
-                            linkline.sendlinenotify(message, "level1");
-                            return BadRequest("freeze");
-                        }
-                    }
-                    return Ok(userDatas.Select(x=>x.ChineseName).ToList());
-                }
-                else
-                {
-                    return Ok("null");
+                        return Ok(userDatas.Item1.Select(x => x.ChineseName).ToList());
+                        break;
+                    case 3://與Face++連線時出現問題
+                        return Ok("connet");
+                        break;
+                    default:
+                        return Ok();//沒用
+                        break;
                 }
             }
             catch(Exception ex)
