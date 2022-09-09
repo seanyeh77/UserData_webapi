@@ -203,6 +203,7 @@ namespace UserData_webapi
         {
             _todoList.FirstOrDefault(x => x.ID == ID).state = !_todoList.FirstOrDefault(x => x.ID == ID).state;
             SaveToFile();
+            await _faceRepository.TrainingPersonGroupAsync();
         }
         public bool getstate(string ID)
         {
@@ -268,6 +269,23 @@ namespace UserData_webapi
                  .Append(_contextAccessor.HttpContext.Request.PathBase)
                  .Append(_contextAccessor.HttpContext.Request.QueryString)
                  .ToString();
+        }
+        /// <summary>
+        /// 刪除資料夾
+        /// </summary>
+        /// <param name="path"></param>
+        void DeleteDirectory(string path)
+        {
+            DirectoryInfo dir = new DirectoryInfo(path);
+            if (dir.Exists)
+            {
+                DirectoryInfo[] childs = dir.GetDirectories();
+                foreach (DirectoryInfo child in childs)
+                {
+                    child.Delete(true);
+                }
+                dir.Delete(true);
+            }
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace UserData_webapi
+﻿using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
+
+namespace UserData_webapi
 {
     public interface IFaceRepository
     {
@@ -16,6 +18,7 @@
         /// <summary>
         /// 新增照片，回傳成功數量
         /// </summary>
+        /// <param name="GroupName"></param>
         /// <returns></returns>
         public Task<int> AddFaceAsync(List<string> face_tokens);
         public Task<int> RemoveFaceAsync(List<string> face_tokens);
