@@ -21,6 +21,7 @@ namespace UserData_webapi.Controllers
             _userDataRepository = userDataRepistory;
             _userCardRepistory = userCardRepistory;
             _configuration = configuration;
+            _faceRepository = faceRepository;
         }
         [HttpGet]
         public IActionResult List()
@@ -140,7 +141,6 @@ namespace UserData_webapi.Controllers
                 else
                 {
                     return BadRequest("ID");
-
                 }
             }
             catch (Exception ex)
