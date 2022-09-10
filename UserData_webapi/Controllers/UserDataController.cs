@@ -21,7 +21,6 @@ namespace UserData_webapi.Controllers
             _userDataRepository = userDataRepistory;
             _userCardRepistory = userCardRepistory;
             _configuration = configuration;
-            _faceRepository = faceRepository;
         }
         [HttpGet]
         public IActionResult List()

@@ -18,7 +18,7 @@ namespace UserData_webapi
         private readonly IFaceRepository _faceRepository;
         string imgfile = string.Empty;
         private readonly IHttpContextAccessor _contextAccessor;
-        public UserDataRepository(IHostEnvironment environment,IFaceRepository faceRepository,IHttpContextAccessor httpContextAccessor)
+        public UserDataRepository(IHostEnvironment environment, IFaceRepository faceRepository, IHttpContextAccessor httpContextAccessor)
         {
             _environment = environment;
             _faceRepository = faceRepository;
@@ -73,7 +73,7 @@ namespace UserData_webapi
         public string getchinesename(string id)
         {
             UserData userdata = _todoList.FirstOrDefault(item => item.ID == id);
-            if  (userdata == null)
+            if (userdata == null)
             {
                 return null;
             }
@@ -105,7 +105,7 @@ namespace UserData_webapi
             foreach (IFormFile formFile in item.Image)
             {
                 List<string> faces_token = await _faceRepository.DetictFace(formFile);
-                if(faces_token.Count() == 1)
+                if (faces_token.Count() == 1)
                 {
                     face_tokens.Add(faces_token.First());
                 }
@@ -203,7 +203,6 @@ namespace UserData_webapi
         {
             _todoList.FirstOrDefault(x => x.ID == ID).state = !_todoList.FirstOrDefault(x => x.ID == ID).state;
             SaveToFile();
-            await _faceRepository.TrainingPersonGroupAsync();
         }
         public bool getstate(string ID)
         {
@@ -215,7 +214,7 @@ namespace UserData_webapi
             List<string> face_tokes = await _faceRepository.DetictFace(formFile);
             if (!face_tokes.Any())
             {
-                return (null,0);//找不到人臉
+                return (null, 0);//找不到人臉
             }
             List<SearchUser> user = await _faceRepository.SearchUser(face_tokes);
             if (user != null)
@@ -269,23 +268,6 @@ namespace UserData_webapi
                  .Append(_contextAccessor.HttpContext.Request.PathBase)
                  .Append(_contextAccessor.HttpContext.Request.QueryString)
                  .ToString();
-        }
-        /// <summary>
-        /// 刪除資料夾
-        /// </summary>
-        /// <param name="path"></param>
-        void DeleteDirectory(string path)
-        {
-            DirectoryInfo dir = new DirectoryInfo(path);
-            if (dir.Exists)
-            {
-                DirectoryInfo[] childs = dir.GetDirectories();
-                foreach (DirectoryInfo child in childs)
-                {
-                    child.Delete(true);
-                }
-                dir.Delete(true);
-            }
         }
     }
 }
