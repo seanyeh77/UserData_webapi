@@ -31,6 +31,7 @@ namespace UserData_webapi
             imgfile = Path.Combine(_environment.ContentRootPath, "img");
             if (!Directory.Exists(imgfile))
                 Directory.CreateDirectory(imgfile);
+
         }
         private void SaveToFile()
         {
