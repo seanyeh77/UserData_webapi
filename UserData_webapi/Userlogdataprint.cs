@@ -2,7 +2,7 @@
 {
     public class Userlogdataprint
     {
-        public string ChineseName { get; set; }
+        public string Name { get; set; }
         public DateTime Time { get; set; }
     }
 }

@@ -14,7 +14,6 @@ namespace UserData_webapi.Controllers
         private readonly IUserDataRepository _userDataRepository;
         private readonly IUserCardRepository _userCardRepistory;
         private readonly IConfiguration _configuration;
-
         public UserDataController(ILogger<UserDataController> logger, IUserDataRepository userDataRepistory, IUserCardRepository userCardRepistory, IConfiguration configuration)
         {
             _logger = logger;
@@ -40,8 +39,9 @@ namespace UserData_webapi.Controllers
         [HttpGet("position/{position}")]
         public async Task<IActionResult> ListPosition(string position)
         {
-            var item = await _userDataRepository.GetUserData_poistion(position);
-            return Ok(item);
+            //var item = await _userDataRepository.GetUserData_poistion(position, GetCompleteUrl());
+            //return Ok(item);
+            return Ok();
         }
         [HttpPost]
         public async Task<IActionResult> Create([FromForm(Name = "userdata")] UserData userdata)
@@ -67,10 +67,6 @@ namespace UserData_webapi.Controllers
                 else
                 {
                     int count = await _userDataRepository.Insert(userdata);
-                    if (count == 0)
-                    {
-                        return BadRequest("facenull");
-                    }
                     string message = $"{_userDataRepository.getchinesename(userdata.ID)}成功註冊個人資料\n成功加入了{count}張照片";
                     await sendEmail.sendemail_id(userdata.ID, "成功註冊通知", message);
                     linkline.sendlinenotify(message, "level2");
@@ -83,34 +79,20 @@ namespace UserData_webapi.Controllers
             return Ok(userdata);
         }
         [HttpPost("detectimg")]
-        public async Task<IActionResult> UserDataDetectImage([FromForm(Name = "image")] IFormFile image)
+        public async Task<IActionResult> EditUserDataDetectImage([FromForm(Name = "image")] IFormFile image)
         {
             try
             {
                 if (image == null)
                 {
-                    return NoContent();
+                    return BadRequest("null");
                 }
-                (UserData, int) userdata = await _userDataRepository.SearchUser(image);
-                switch (userdata.Item2)
+                UserData userdata = await _userDataRepository.SearchUser(image);
+                if (userdata == null)
                 {
-                    case 0://找不到人臉
-                        return BadRequest("face");
-                        break;
-                    case 1://找到人臉但找不到人
-                        return BadRequest("people");
-                        break;
-                    case 2://找到人臉也找到人
-                        return Ok(userdata.Item1);
-                        break;
-                    case 3://與Face++連線時出現問題
-                        return BadRequest("connet");
-                        break;
-                    default:
-                        return BadRequest();//沒用
-                        break;
+                    return BadRequest("face");
                 }
-                
+                return Ok(userdata);
             }
             catch (Exception ex)
             {
@@ -229,5 +211,19 @@ namespace UserData_webapi.Controllers
             }
             return Ok();
         }
+        /// <summary>
+        /// 獲取當前請求完整的Url地址
+        /// </summary>
+        /// <returns></returns>
+        //private string GetCompleteUrl()
+        //{
+        //    return new StringBuilder()
+        //         .Append(HttpContext.Request.Scheme)
+        //         .Append("://")
+        //         .Append(HttpContext.Request.Host)
+        //         .Append(HttpContext.Request.PathBase)
+        //         .Append(HttpContext.Request.QueryString)
+        //         .ToString();
+        //}
     }
 }

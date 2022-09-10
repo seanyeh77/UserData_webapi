@@ -2,7 +2,7 @@
 {
     public interface IUserDataRepository
     {
-        public Task<List<UserData>> GetUserData_poistion(string position);
+        public Task<List<UserData>> GetUserData_poistion(string position,string url);
         public string getchinesename(string id);
         bool DoesItemExistID(string ID);
         bool DoesItemExistfreeze(string ID);
@@ -18,7 +18,7 @@
         void DeletedisfreezeID(string ID);
         void changestate(string ID);
         bool getstate(string ID);
-        public Task<(UserData, int)> SearchUser(IFormFile formFile);
+        public Task<UserData> SearchUser(IFormFile formFile);
         public string getemail(string ID);
     }
 }

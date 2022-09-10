@@ -19,6 +19,6 @@
         /// <returns></returns>
         public Task<int> AddFaceAsync(List<string> face_tokens);
         public Task<int> RemoveFaceAsync(List<string> face_tokens);
-        public Task<List<SearchUser>> SearchUser(List<string> face_tokes);
+        public Task<List<SearchUser>> SearchUser(IFormFile formFile);
     }
 }
