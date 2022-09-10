@@ -1,7 +1,7 @@
 ﻿namespace UserData_webapi
 {
     public class alluserdata
-    {
+    { 
         public string ID { get; set; }
         public string Name { get; set; }
         public int? grade { get; set; }
