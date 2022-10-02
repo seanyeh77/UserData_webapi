@@ -56,23 +56,23 @@ namespace UserData_webapi
         }
         public int GetCount(string ID)
         {
-            return _todoList.Count(x =>x.ID==ID&&!x.freeze);
+            return _todoList.Count(x =>x.ID==ID&&!x.Lock);
         }
         public bool DoesItemExistUID(string UID)
         {
             return _todoList.Any(item => item.UID == UID);
         }
-        public bool DoesItemExistfreezefalse(string UID)
+        public bool DoesItemExistlockfalse(string UID)
         {
-            return _todoList.Any(item => item.UID == UID && item.freeze == false);
+            return _todoList.Any(item => item.UID == UID && item.Lock == false);
         }
         public UserCard FindUID(string UID)
         {
             return _todoList.FirstOrDefault(item => item.UID == UID);
         }
-        public UserCard FindUIDfreezefalse(string UID)
+        public UserCard FindUIDlockfalse(string UID)
         {
-            return _todoList.FirstOrDefault(item => item.UID == UID && item.freeze==false);
+            return _todoList.FirstOrDefault(item => item.UID == UID && item.Lock==false);
         }
         public void Insert(UserCard item)
         {
@@ -96,11 +96,11 @@ namespace UserData_webapi
             _todoList.RemoveAll(x => x.ID == ID);
             SaveToFile();
         }
-        public void DeletefreezeUID(string UID)
+        public void DeletelockUID(string UID)
         {
             foreach (UserCard item in _todoList.Where(x => x.UID == UID))
             {
-                item.freeze = true;
+                item.Lock = true;
             }
             SaveToFile();
         }

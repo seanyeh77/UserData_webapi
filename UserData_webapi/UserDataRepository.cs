@@ -83,13 +83,13 @@ namespace UserData_webapi
         {
             return _todoList.Any(item => item.ID == id);
         }
-        public bool DoesItemExistfreeze(string id)
+        public bool DoesItemExistlock(string id)
         {
-            return _todoList.Any(item => item.ID == id && item.freeze);
+            return _todoList.Any(item => item.ID == id && item.Lock);
         }
-        public bool DoesItemExistfreezefalse(string ID)
+        public bool DoesItemExistlockfalse(string ID)
         {
-            return _todoList.Any(item => item.ID == ID && !item.freeze);
+            return _todoList.Any(item => item.ID == ID && !item.Lock);
         }
         public UserData FindID(string ID)
         {
@@ -97,7 +97,7 @@ namespace UserData_webapi
         }
         public UserData Find(string ID)
         {
-            return _todoList.FirstOrDefault(item => item.ID == ID && item.freeze == false);
+            return _todoList.FirstOrDefault(item => item.ID == ID && item.Lock == false);
         }
         public async Task<int> Insert(UserData item)
         {
@@ -141,7 +141,7 @@ namespace UserData_webapi
                 position = item.position,
                 view = item.view,
                 state = false,
-                freeze = false,
+                Lock = false,
                 face_tokens = face_tokens,
             };
             _todoList.Add(userData);
@@ -170,7 +170,7 @@ namespace UserData_webapi
                 position = item.position,
                 view = item.view,
                 state = item.state,
-                freeze = item.freeze,
+                Lock = item.Lock,
                 face_tokens = ID.face_tokens,
             };
             var index = _todoList.IndexOf(ID);
@@ -187,15 +187,15 @@ namespace UserData_webapi
             SaveToFile();
             return sucess;
         }
-        public void DeletefreezeID(string ID)
+        public void DeletelockID(string ID)
         {
-            _todoList.FirstOrDefault(x => x.ID == ID).freeze = true;
+            _todoList.FirstOrDefault(x => x.ID == ID).Lock = true;
             _todoList.FirstOrDefault(x => x.ID == ID).state = false;
             SaveToFile();
         }
-        public void DeletedisfreezeID(string ID)
+        public void DeleteunLockID(string ID)
         {
-            _todoList.FirstOrDefault(x => x.ID == ID).freeze = false;
+            _todoList.FirstOrDefault(x => x.ID == ID).Lock = false;
             _todoList.FirstOrDefault(x => x.ID == ID).state = false;
             SaveToFile();
         }

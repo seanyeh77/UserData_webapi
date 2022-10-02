@@ -26,9 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="img\A45.jpg">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
+    <Folder Include="img\" />
   </ItemGroup>
   <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 

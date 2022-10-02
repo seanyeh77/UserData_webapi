@@ -27,13 +27,13 @@ namespace UserData_webapi
             Message = "===系統管理員級命令===\n";
             Message += "[reset]-->重製所有人狀態\n";
             Message += "[lineuserid]-->列出Line Bot的朋友ID\n";
-            Message += "[changerole ID 角色]-->更改成員權限(角色:admin manager texter)\n";
+            Message += "[changerole ID 角色]-->更改成員權限(角色:admin manager tester)\n";
             Message += "===管理員級命令===\n";
-            Message += "[freeze 學號]-->凍結成員\n";
-            Message += "[disfreeze 學號]-->解除凍結成員\n";
+            Message += "[lock 學號]-->鎖定成員\n";
+            Message += "[unlock 學號]-->解除鎖定成員\n";
             Message += "===一般成員級命令===\n";
             Message += "[help]-->查詢功能選單\n";
-            Message += "[url]-->查詢團隊網站網址\n";
+            Message += "[url]-->查詢註冊個人資料網址\n";
             Message += "[state]-->查詢成員以簽到狀態\n";
             Message += "[data (學號)]-->查詢成員資料\n";
             return Message;
@@ -48,10 +48,10 @@ namespace UserData_webapi
                 }
                 else
                 {
-                    Message = "學號      姓名　 凍結 狀態\n";
+                    Message = "學號      姓名　 鎖定 狀態\n";
                     foreach (UserData data in _userDataRepository.All)
                     {
-                        Message += $"{data.ID}  {data.ChineseName}  {(data.freeze?"是":"否")}   {(data.state ? "在教室":"離開")}\n";
+                        Message += $"{data.ID}  {data.ChineseName}  {(data.Lock?"是":"否")}   {(data.state ? "在教室":"離開")}\n";
                     }
                 }
             }
@@ -65,49 +65,49 @@ namespace UserData_webapi
                 else
                 {
                     UserData userData = _userDataRepository.FindID(ID);
-                    Message = "學號      姓名　 凍結 狀態\n";
-                    Message += $"{userData}  {userData.ChineseName}  {(userData.freeze ? "是":"否")}   {(userData.state ? "在教室":"離開")}\n";
+                    Message = "學號      姓名　 鎖定 狀態\n";
+                    Message += $"{userData}  {userData.ChineseName}  {(userData.Lock ? "是":"否")}   {(userData.state ? "在教室":"離開")}\n";
                 }
                 
             }
             return Message;
         }
-        public string freeze(string ID)
+        public string Lock(string ID)
         {
             var data = _userDataRepository.FindID(ID);
             if (data == null)
             {
                 Message = $"沒有找到{ID}用戶";
             }
-            bool itemExistsfreeze = _userDataRepository.DoesItemExistfreeze(data.ID);
-            if (itemExistsfreeze)
+            bool itemExistslock = _userDataRepository.DoesItemExistlock(data.ID);
+            if (itemExistslock)
             {
-                Message = $"{ID}\n已經被凍結";
+                Message = $"{ID}\n已經被鎖定";
             }
             else
             {
-                _userDataRepository.DeletefreezeID(ID);
-                Message = $"{ID}\n已被凍結";
+                _userDataRepository.DeletelockID(ID);
+                Message = $"{ID}\n已被鎖定";
                 _linkline.sendlinenotify(Message, "level2");
             }
             return Message;
         }
-        public string disfreeze(string ID)
+        public string unLock(string ID)
         {
             var data = _userDataRepository.FindID(ID);
             if (data == null)
             {
                 Message = "沒有找到此用戶";
             }
-            bool itemExistsfreeze = _userDataRepository.DoesItemExistfreezefalse(data.ID);
-            if (itemExistsfreeze)
+            bool itemExistslock = _userDataRepository.DoesItemExistlockfalse(data.ID);
+            if (itemExistslock)
             {
-                Message = $"{ID}\n沒有被凍結";
+                Message = $"{ID}\n沒有被鎖定";
             }
             else
             {
-                _userDataRepository.DeletedisfreezeID(ID);
-                Message = $"{ID}\n已被解除凍結";
+                _userDataRepository.DeleteunLockID(ID);
+                Message = $"{ID}\n已被解除鎖定";
                 _linkline.sendlinenotify(Message, "level2");
             }
             return Message;
@@ -196,10 +196,10 @@ namespace UserData_webapi
             else
             {
                 Message = $"簽到人數:{countperosn}人\n";
-                Message = "學號      姓名　 凍結 狀態\n";
+                Message = "學號      姓名　 鎖定 狀態\n";
                 foreach (UserData data in _userDataRepository.All.Where(x => x.state))
                 {
-                    Message += $"{data.ID}  {data.ChineseName}  {(data.freeze ? "是" : "否")}   {(data.state ? "在教室" : "離開")}\n";
+                    Message += $"{data.ID}  {data.ChineseName}  {(data.Lock ? "是" : "否")}   {(data.state ? "在教室" : "離開")}\n";
                 }
             }
             return Message;

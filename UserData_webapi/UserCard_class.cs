@@ -10,6 +10,6 @@ namespace UserData_webapi
         [Required]
         public string UID { get; set; }
         [Required]
-        public bool freeze { get; set; } = false;
+        public bool Lock { get; set; } = false;
     }
 }

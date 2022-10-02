@@ -33,21 +33,21 @@ namespace UserData_webapi.Controllers
         [HttpGet("{UID}")]
         public IActionResult List(string UID)
         {
-            UserCard userCard = _userCardRepistory.FindUIDfreezefalse(UID);
+            UserCard userCard = _userCardRepistory.FindUIDlockfalse(UID);
             if (userCard == null)
             {
                 return BadRequest("UID");
             }
             string ID = _userCardRepistory.GetID(UID);
             bool itemExistsID = _userDataRepository.DoesItemExistID(ID);
-            bool itemExistsfreeze = _userDataRepository.DoesItemExistfreeze(ID);
+            bool itemExistslock = _userDataRepository.DoesItemExistlock(ID);
             if (!itemExistsID)
             {
                 return BadRequest("ID");
             }
-            if (itemExistsfreeze)
+            if (itemExistslock)
             {
-                return BadRequest("freeze");
+                return BadRequest("lock");
             }
             return Ok(_userDataRepository.Find(userCard.ID));
         }
@@ -63,17 +63,17 @@ namespace UserData_webapi.Controllers
                     return BadRequest("null");
                 }
                 bool itemExistsID = _userDataRepository.DoesItemExistID(item.ID);
-                bool itemExistsfreeze = _userDataRepository.DoesItemExistfreeze(item.ID);
+                bool itemExistslock = _userDataRepository.DoesItemExistlock(item.ID);
                 if (!itemExistsID)
                 {
                     return BadRequest("ID");
                 }
-                if (itemExistsfreeze)
+                if (itemExistslock)
                 {
-                    return BadRequest("freeze");
+                    return BadRequest("lock");
                 }
                 
-                if (_userCardRepistory.DoesItemExistfreezefalse(item.UID))
+                if (_userCardRepistory.DoesItemExistlockfalse(item.UID))
                 {
                     return BadRequest("UID");
                 }
@@ -102,23 +102,23 @@ namespace UserData_webapi.Controllers
             {
                 linkline linkline = new linkline(_configuration);
                 SendEmail sendEmail = new SendEmail(_configuration, _userDataRepository);
-                UserCard item = _userCardRepistory.FindUIDfreezefalse(UID);
+                UserCard item = _userCardRepistory.FindUIDlockfalse(UID);
                 if (item == null)
                 {
                     return BadRequest("null");
                 }
                 string ID = item.ID;
                 bool itemExistsID = _userDataRepository.DoesItemExistID(ID);
-                bool itemExistsfreeze = _userDataRepository.DoesItemExistfreeze(ID);
+                bool itemExistslock = _userDataRepository.DoesItemExistlock(ID);
                 if (!itemExistsID)
                 {
                     return BadRequest("ID");
                 }
-                if (itemExistsfreeze)
+                if (itemExistslock)
                 {
-                    return BadRequest("freeze");
+                    return BadRequest("lock");
                 }
-                _userCardRepistory.DeletefreezeUID(UID);
+                _userCardRepistory.DeletelockUID(UID);
                 string message = $"{_userDataRepository.getchinesename(item.ID)}已刪除卡片";
                 await sendEmail.sendemail_id(ID, "卡片成功刪除通知", message);
                 linkline.sendlinenotify(message, "level1");

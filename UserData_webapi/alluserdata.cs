@@ -7,7 +7,7 @@
         public int? grade { get; set; }
         public string UID { get; set; }
         public DateTime Time { get; set; }
-        public bool Freeze { get; set; }
+        public bool Lock { get; set; }
         
     }
 }

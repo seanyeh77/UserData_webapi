@@ -47,10 +47,10 @@ namespace UserData_webapi.Controllers
                 {
                     return BadRequest("null");
                 }
-                if (_userCardRepistory.DoesItemExistfreezefalse(item.UID))
+                if (_userCardRepistory.DoesItemExistlockfalse(item.UID))
                 {
                     string ID = _userCardRepistory.GetID(item.UID);
-                    if (_userDataRepository.DoesItemExistfreezefalse(_userCardRepistory.GetID(item.UID)))
+                    if (_userDataRepository.DoesItemExistlockfalse(_userCardRepistory.GetID(item.UID)))
                     {
                         item.state = !_userDataRepository.getstate(ID);
                         _userLogRepistory.UserLog_Insert(item);
@@ -65,7 +65,7 @@ namespace UserData_webapi.Controllers
                         string message = $"{_userDataRepository.getchinesename(ID)}想要{(_userDataRepository.getstate(_userCardRepistory.GetID(item.UID)) ? "簽到" : "簽退")}({ID})\n但被結凍";
                         await sendEmail.sendemail_id(ID, "打卡失敗通知", message);
                         linkline.sendlinenotify(message, "level1");
-                        return BadRequest("freeze");
+                        return BadRequest("lock");
                     }
                 }
                 else
@@ -99,7 +99,7 @@ namespace UserData_webapi.Controllers
                         foreach (string userID in userDatas.Item1.Select(x => x.ID))
                         {
                             UserLogByFace userLogByFace = new UserLogByFace();
-                            if (_userDataRepository.DoesItemExistfreezefalse(userID))
+                            if (_userDataRepository.DoesItemExistlockfalse(userID))
                             {
                                 userLogByFace.ID = userID;
                                 userLogByFace.time = DateTime.Now;
@@ -115,7 +115,7 @@ namespace UserData_webapi.Controllers
                                 string message = $"{_userDataRepository.getchinesename(userID)}想要{(userLogByFace.state ? "簽到" : "簽退")}({userID})\n但被結凍";
                                 await sendEmail.sendemail_id(userID, "打卡失敗通知", message);
                                 linkline.sendlinenotify(message, "level1");
-                                return BadRequest("freeze");
+                                return BadRequest("lock");
                             }
                         }
                         return Ok(userDatas.Item1.Select(x => x.ChineseName).ToList());

@@ -55,12 +55,12 @@ namespace UserData_webapi.Controllers
                     return BadRequest("null");
                 }
                 bool itemExistsID = _userDataRepository.DoesItemExistID(userdata.ID);
-                bool itemExistsfreeze = _userDataRepository.DoesItemExistfreeze(userdata.ID);
+                bool itemExistslock = _userDataRepository.DoesItemExistlock(userdata.ID);
                 if (itemExistsID)
                 {
-                    if (itemExistsfreeze)
+                    if (itemExistslock)
                     {
-                        return BadRequest("freeze");
+                        return BadRequest("lock");
                     }
                     return BadRequest("isID");
                 }
@@ -125,12 +125,12 @@ namespace UserData_webapi.Controllers
                 linkline linkline = new linkline(_configuration);
                 SendEmail sendEmail = new SendEmail(_configuration, _userDataRepository);
                 bool itemExistsID = _userDataRepository.DoesItemExistID(userdata.ID);
-                bool itemExistsfreeze = _userDataRepository.DoesItemExistfreeze(userdata.ID);
+                bool itemExistslock = _userDataRepository.DoesItemExistlock(userdata.ID);
                 if (itemExistsID)
                 {
-                    if (itemExistsfreeze)
+                    if (itemExistslock)
                     {
-                        return BadRequest("freeze");
+                        return BadRequest("lock");
                     }
                     _userDataRepository.Update(userdata);
                     string message = $"{_userDataRepository.getchinesename(userdata.ID)}成功修改了個人資料";
@@ -172,8 +172,8 @@ namespace UserData_webapi.Controllers
             }
             return Ok();
         }
-        [HttpDelete("freeze/{ID}")]
-        public async Task<IActionResult> freeze(string ID)
+        [HttpDelete("lock/{ID}")]
+        public async Task<IActionResult> Lock(string ID)
         {
             try
             {
@@ -184,14 +184,14 @@ namespace UserData_webapi.Controllers
                 {
                     return BadRequest("ID");
                 }
-                bool itemExistsfreeze = _userDataRepository.DoesItemExistfreeze(item.ID);
-                if (itemExistsfreeze)
+                bool itemExistslock = _userDataRepository.DoesItemExistlock(item.ID);
+                if (itemExistslock)
                 {
-                    return BadRequest("freeze");
+                    return BadRequest("lock");
                 }
-                _userDataRepository.DeletefreezeID(ID);
-                string message = $"{_userDataRepository.getchinesename(ID)}已被凍結";
-                await sendEmail.sendemail_id(ID, "凍結通知", message);
+                _userDataRepository.DeletelockID(ID);
+                string message = $"{_userDataRepository.getchinesename(ID)}已被鎖定";
+                await sendEmail.sendemail_id(ID, "鎖定通知", message);
                 linkline.sendlinenotify(message, "level2");
             }
             catch (Exception ex)
@@ -200,8 +200,8 @@ namespace UserData_webapi.Controllers
             }
             return Ok();
         }
-        [HttpDelete("disfreeze/{ID}")]
-        public async Task<IActionResult> disfreeze(string ID)
+        [HttpDelete("unlock/{ID}")]
+        public async Task<IActionResult> unLock(string ID)
         {
             try
             {
@@ -212,14 +212,14 @@ namespace UserData_webapi.Controllers
                 {
                     return BadRequest("ID");
                 }
-                bool itemExistsfreeze = _userDataRepository.DoesItemExistfreezefalse(item.ID);
-                if (itemExistsfreeze)
+                bool itemExistslock = _userDataRepository.DoesItemExistlockfalse(item.ID);
+                if (itemExistslock)
                 {
-                    return BadRequest("disfreeze");
+                    return BadRequest("unluck");
                 }
-                _userDataRepository.DeletedisfreezeID(ID);
-                string message = $"{_userDataRepository.getchinesename(ID)}已被解除凍結";
-                await sendEmail.sendemail_id(ID, "解除凍結通知", message);
+                _userDataRepository.DeleteunLockID(ID);
+                string message = $"{_userDataRepository.getchinesename(ID)}已被解除鎖定";
+                await sendEmail.sendemail_id(ID, "解除鎖定通知", message);
                 linkline.sendlinenotify(message, "level2");
             }
             catch (Exception ex)

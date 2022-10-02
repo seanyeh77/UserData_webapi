@@ -50,10 +50,10 @@ namespace UserData_webapi.Controllers
                 }
                 else if (!_rechalRepository.getstate())
                 {
-                    if (_userDataRepository.DoesItemExistfreeze(ID))
+                    if (_userDataRepository.DoesItemExistlock(ID))
                     {
-                        linkline.sendlinenotify($"{_userDataRepository.getchinesename(ID)}想開啟雷切機，但已被凍結", "level2");
-                        return BadRequest("freeze");
+                        linkline.sendlinenotify($"{_userDataRepository.getchinesename(ID)}想開啟雷切機，但已被鎖定", "level2");
+                        return BadRequest("lock");
                     }
                     else if (_userDataRepository.getstate(ID)) //判別此人簽到狀態
                     {

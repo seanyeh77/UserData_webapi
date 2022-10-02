@@ -4,6 +4,6 @@
     {
         public string Name { get; set; }
         public string ID { get; set; }
-        public string Role { get; set; } = "texter";
+        public string Role { get; set; } = "tester";
     }
 }

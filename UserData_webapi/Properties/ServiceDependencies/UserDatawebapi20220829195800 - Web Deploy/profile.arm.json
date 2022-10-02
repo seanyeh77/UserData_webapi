@@ -21,7 +21,7 @@
     },
     "resourceName": {
       "type": "string",
-      "defaultValue": "UserDatawebapi20220829195800",
+      "defaultValue": "userdatawebapi20220829195800",
       "metadata": {
         "description": "Name of the main resource to be created by this template."
       }

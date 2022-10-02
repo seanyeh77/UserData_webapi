@@ -87,7 +87,7 @@ namespace UserData_webapi
                         from y in xy.DefaultIfEmpty()
                         join z in UserLogs on y == null ? "" : y.UID equals z.UID into yz
                         from z in yz.DefaultIfEmpty()
-                        select new alluserdata { ID = x.ID, Name = x.ChineseName, grade = x.grade, UID = y == null ? "" : y.UID, Time = z == null ? new DateTime() : z.time, Freeze = x.freeze };
+                        select new alluserdata { ID = x.ID, Name = x.ChineseName, grade = x.grade, UID = y == null ? "" : y.UID, Time = z == null ? new DateTime() : z.time, Lock = x.Lock };
             quary = from x in quary
                         // 暑假時段(只到21點)
                     where (((int)x.Time.Month ==7 || (int)x.Time.Month == 8) && x.Time.Hour <= afterafternoon)

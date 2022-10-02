@@ -154,7 +154,7 @@ namespace UserData_webapi.Controllers
                         switch (item.message.type)
                         {
                             case "text":
-                                judgemessage(item.replyToken, item.message.text, item.source.userId,linename);
+                                judgemessage(item.replyToken, item.message.text, item.source.userId, linename);
                                 break;
                             case "audio":
                                 string[] audiotext = await _jobRespository.audiototext(item.message.id);
@@ -173,7 +173,7 @@ namespace UserData_webapi.Controllers
                                 }
                                 else if (audiotext[1] != null)
                                 {
-                                    if (!judgemessage(item.replyToken, audiotext[1], item.source.userId,linename))
+                                    if (!judgemessage(item.replyToken, audiotext[1], item.source.userId, linename))
                                     {
                                         if (audiotext[0] != null)
                                         {
@@ -269,8 +269,9 @@ namespace UserData_webapi.Controllers
             }
             return new string(c);
         }
-        private bool judgemessage(string Token, string message, string userID,string linename)
+        private bool judgemessage(string Token, string message, string userID, string linename)
         {
+            message = message.Trim();//文字去頭尾空白
             string[] textmessage = ToNarrow(message).ToLower().Split(" ");
             //判斷命令
             if (textmessage.Length == 1)    //當只輸入了一個文字時
@@ -288,7 +289,7 @@ namespace UserData_webapi.Controllers
                         _jobRespository.sendmessage(
                             Token,
                             $"{linename}查詢了網站",
-                            "https://team8723.azurewebsites.net/",
+                            "https://registeruserdata20220829110531.azurewebsites.net/",
                             "level1");
                         break;
                     case "data":
@@ -380,13 +381,13 @@ namespace UserData_webapi.Controllers
                         _jobRespository.listdata(textmessage[1]),
                         "level1");
                         break;
-                    case "freeze":
-                        if (_lineBotManageRespository.getuserid(userID).Role != "texter")
+                    case "lock":
+                        if (_lineBotManageRespository.getuserid(userID).Role != "tester")
                         {
                             _jobRespository.sendmessage(
                             Token,
-                           $"{linename}\n想要凍結\n{textmessage[1]}\n的個人資料",
-                            _jobRespository.freeze(textmessage[1]),
+                           $"{linename}\n想要鎖定\n{textmessage[1]}\n的個人資料",
+                            _jobRespository.Lock(textmessage[1]),
                             "level1");
                         }
                         else
@@ -398,13 +399,13 @@ namespace UserData_webapi.Controllers
                                 "level1");
                         }
                         break;
-                    case "disfreeze":
-                        if (_lineBotManageRespository.getuserid(userID).Role != "texter")
+                    case "unlock":
+                        if (_lineBotManageRespository.getuserid(userID).Role != "tester")
                         {
                             _jobRespository.sendmessage(
                             Token,
-                           $"{linename}\n想要解除凍結\n{textmessage[1]}\n的個人資料",
-                            _jobRespository.disfreeze(textmessage[1]),
+                           $"{linename}\n想要解除鎖定\n{textmessage[1]}\n的個人資料",
+                            _jobRespository.unLock(textmessage[1]),
                             "level1");
                         }
                         else

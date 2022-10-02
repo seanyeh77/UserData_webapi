@@ -110,7 +110,7 @@ namespace UserData_webapi
                 {
                     user.Role = Role;
                 }
-                else if (Role == "texter") //當角色為texter時
+                else if (Role == "tester") //當角色為tester時
                 {
                     user.Role = Role;
                 }

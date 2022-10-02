@@ -57,9 +57,9 @@ namespace UserData_webapi
         /// </summary>
         public bool state { get; set; } = false;
         /// <summary>
-        /// ­áµ²ª¬ºA
+        /// Âê©wª¬ºA
         /// </summary>
-        public bool freeze { get; set; } = false;
+        public bool Lock { get; set; } = false;
         /// <summary>
         /// ¸s²Õ¤HÁyID
         /// </summary>
