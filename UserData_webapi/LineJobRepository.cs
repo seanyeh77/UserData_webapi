@@ -25,7 +25,7 @@ namespace UserData_webapi
         public string function()
         {
             Message = "===系統管理員級命令===\n";
-            Message += "[reset]-->重製所有人狀態\n";
+            Message += "[reset]-->重置所有人狀態\n";
             Message += "[lineuserid]-->列出Line Bot的朋友ID\n";
             Message += "[changerole ID 角色]-->更改成員權限(角色:admin manager tester)\n";
             Message += "===管理員級命令===\n";
@@ -33,7 +33,8 @@ namespace UserData_webapi
             Message += "[unlock 學號]-->解除鎖定成員\n";
             Message += "===一般成員級命令===\n";
             Message += "[help]-->查詢功能選單\n";
-            Message += "[url]-->查詢註冊個人資料網址\n";
+            Message += "[url]-->查詢管理網站\n";
+            Message += "[website]-->查詢資料網站\n";
             Message += "[state]-->查詢成員以簽到狀態\n";
             Message += "[data (學號)]-->查詢成員資料\n";
             return Message;

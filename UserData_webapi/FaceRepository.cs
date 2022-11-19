@@ -39,7 +39,7 @@ namespace UserData_webapi
             if (!response.IsSuccessStatusCode)
             {
                 string str = await response.Content.ReadAsStringAsync();
-                return null;
+                return new List<string>();
             }
             var json  = await response.Content.ReadFromJsonAsync<Detectjson>();
             List<string> faces_token_list = new List<string>();

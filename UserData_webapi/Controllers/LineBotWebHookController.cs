@@ -39,24 +39,15 @@ namespace UserData_webapi.Controllers
         [HttpGet("userdaylog")]
         public IActionResult getuserdaylog()
         {
-            var data1 = _userLogRepository.UserLogs_All.Where(x => x.time.Month == DateTime.Today.Month);
+            var data1 = _userLogRepository.AllUserLogs(_userCardRepository).Where(x => x.time.Month == DateTime.Today.Month);
             var data2 = from a in data1
-                        join b in _userCardRepository.All on a.UID equals b.UID into c
-                        from b in c.DefaultIfEmpty()
-                        select new
-                        {
-                            time = a.time,
-                            ID = b.ID
-
-                        };
-            var data3 = from a in data2
                         join b in _userDataRepository.All on a.ID equals b.ID
                         select new Userlogdataprint
                         {
                             ChineseName = b.ChineseName,
                             Time = a.time
                         };
-            return Ok(data3);
+            return Ok(data2);
         }
         [HttpGet("fivetime")]
         public IActionResult fivetime()
@@ -288,8 +279,15 @@ namespace UserData_webapi.Controllers
                     case "url":
                         _jobRespository.sendmessage(
                             Token,
-                            $"{linename}查詢了網站",
+                            $"{linename}查詢了管理網站",
                             "https://registeruserdata20220829110531.azurewebsites.net/",
+                            "level1");
+                        break;
+                    case "website":
+                        _jobRespository.sendmessage(
+                            Token,
+                            $"{linename}查詢了網站",
+                            "https://frc8723.azurewebsites.net/",
                             "level1");
                         break;
                     case "data":
@@ -331,11 +329,11 @@ namespace UserData_webapi.Controllers
                         if (_lineBotManageRespository.getuserid(userID).Role == "admin")
                         {
                             reset();
-                            _linkline.sendlinenotify($"{linename}重製了狀態", "level1");
+                            _linkline.sendlinenotify($"{linename}重置了狀態", "level1");
                             _jobRespository.sendmessage(
                                 Token,
-                                $"{linename}\n重製了狀態",
-                                "以重製了狀態",
+                                $"{linename}\n重置了狀態",
+                                "以重置了狀態",
                                 "level1");
                         }
                         else

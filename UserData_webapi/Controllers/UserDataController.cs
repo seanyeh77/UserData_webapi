@@ -54,6 +54,10 @@ namespace UserData_webapi.Controllers
                 {
                     return BadRequest("null");
                 }
+                else if(userdata.Image == null)
+                {
+                    return BadRequest("nullimg");
+                }
                 bool itemExistsID = _userDataRepository.DoesItemExistID(userdata.ID);
                 bool itemExistslock = _userDataRepository.DoesItemExistlock(userdata.ID);
                 if (itemExistsID)

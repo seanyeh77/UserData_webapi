@@ -5,7 +5,7 @@ namespace UserData_webapi
     public class UserPoint
     {
         [Required]
-        public string Name { get; set; }
+        public string ChineseName { get; set; }
         [Required]
         public string ID { get; set; }
         [Required]

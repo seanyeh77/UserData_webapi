@@ -1,4 +1,5 @@
-﻿using Microsoft.CognitiveServices.Speech.Transcription;
+﻿using Microsoft.CognitiveServices.Speech.Audio;
+using Microsoft.CognitiveServices.Speech.Transcription;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -68,7 +69,7 @@ namespace UserData_webapi
                 UserLogByFaces = new List<UserLogByFace>();
             }
         }
-        public IEnumerable<UserLog> UserLogs_All
+        public IEnumerable<UserLog> UserLog
         {
             get { return UserLogs; }
         }
@@ -76,34 +77,38 @@ namespace UserData_webapi
         {
             get { return UserLogByFaces; }
         }
+        public IEnumerable<UserLogByFace> AllUserLogs(IUserCardRepository _userCardRepistory)
+        {
+            var quary = from x in UserLogs
+                        join y in _userCardRepistory.All on x.UID equals y.UID into xy
+                        from y in xy.DefaultIfEmpty()
+                        select new UserLogByFace { ID = y.ID, time = x == null ? new DateTime() : x.time };
+            quary = quary.Union(UserLogByFaces);
+            return quary;
+        }
         public IEnumerable<UserPoint> usertable(IUserCardRepository _userCardRepistory, IUserDataRepository _userDataRepository)
         {
             int beforenoon = 12;
             int afternoon = 13;
             int beforeafternoon = 16;
             int afterafternoon = 21;
-            var quary = from x in _userDataRepository.All
-                        join y in _userCardRepistory.All on x.ID equals y.ID into xy
-                        from y in xy.DefaultIfEmpty()
-                        join z in UserLogs on y == null ? "" : y.UID equals z.UID into yz
-                        from z in yz.DefaultIfEmpty()
-                        select new alluserdata { ID = x.ID, Name = x.ChineseName, grade = x.grade, UID = y == null ? "" : y.UID, Time = z == null ? new DateTime() : z.time, Lock = x.Lock };
+            var quary = AllUserLogs(_userCardRepistory);
             quary = from x in quary
                         // 暑假時段(只到21點)
-                    where (((int)x.Time.Month ==7 || (int)x.Time.Month == 8) && x.Time.Hour <= afterafternoon)
+                    where (((int)x.time.Month ==7 || (int)x.time.Month == 8) && x.time.Hour <= afterafternoon)
                         // 非暑假且為假日時段(只到21點)
-                        || (((int)x.Time.Month != 7 || (int)x.Time.Month != 8)&&((int)x.Time.DayOfWeek == 0 || (int)x.Time.DayOfWeek == 6) && x.Time.Hour <= afterafternoon)
+                        || (((int)x.time.Month != 7 || (int)x.time.Month != 8)&&((int)x.time.DayOfWeek == 0 || (int)x.time.DayOfWeek == 6) && x.time.Hour <= afterafternoon)
                         // 非暑假且非假日時段(中午12點到13點、16點到21點)
-                        || (((int)x.Time.Month != 7 || (int)x.Time.Month != 8) && ((int)x.Time.DayOfWeek != 0 && (int)x.Time.DayOfWeek != 6)&&((x.Time.Hour >= beforenoon && x.Time.Hour <= afternoon) || (x.Time.Hour >= beforeafternoon && x.Time.Hour <= afterafternoon)))
+                        || (((int)x.time.Month != 7 || (int)x.time.Month != 8) && ((int)x.time.DayOfWeek != 0 && (int)x.time.DayOfWeek != 6)&&((x.time.Hour >= beforenoon && x.time.Hour <= afternoon) || (x.time.Hour >= beforeafternoon && x.time.Hour <= afterafternoon)))
                     select x;
 
             //算出全部總時間
             var userPoint1 = from x in quary
-                             group x by new { x.ID, x.Time.Date ,time_type= ((int)x.Time.Month == 7 || (int)x.Time.Month == 8?0:((int)x.Time.DayOfWeek == 0 || (int)x.Time.DayOfWeek == 6 ?1: (x.Time.Hour >= beforenoon && x.Time.Hour <= afternoon?2:3))) } into g
+                             group x by new { x.ID, x.time.Date ,time_type= ((int)x.time.Month == 7 || (int)x.time.Month == 8?0:((int)x.time.DayOfWeek == 0 || (int)x.time.DayOfWeek == 6 ?1: (x.time.Hour >= beforenoon && x.time.Hour <= afternoon?2:3))) } into g
                              select new
                              {
                                  ID = g.Key.ID,
-                                 totaleverydayminute = (g.Max(a => a.Time) - g.Min(a => a.Time)).TotalMinutes,
+                                 totaleverydayminute = (g.Max(a => a.time) - g.Min(a => a.time)).TotalMinutes,
                                  time_type = g.Key.time_type
                              };
             var userPoint6 = from x in userPoint1
@@ -115,22 +120,22 @@ namespace UserData_webapi
                              };
             //算出上個月總天數
             var userPoint2 = from x in quary
-                             where x.Time.ToString("yyyyMM") == DateTime.Today.AddMonths(-1).ToString("yyyyMM")
+                             where x.time.ToString("yyyyMM") == DateTime.Today.AddMonths(-1).ToString("yyyyMM")
                              group x by x.ID into g
                              select new
                              {
                                  ID = g.Key,
-                                 monaverage = (float)g.Select(y => y.Time.Day).Distinct().Count()
+                                 monaverage = (float)g.Select(y => y.time.Day).Distinct().Count()
                              };
             //算出上個月每一天的時間
             var userPoint3 = from x in quary
-                             where x.Time.ToString("yyyyMM") == DateTime.Today.AddMonths(-1).ToString("yyyyMM")
-                             group x by new { x.ID, x.Time.Date, time_type = ((int)x.Time.DayOfWeek == 0 || (int)x.Time.DayOfWeek == 6 ? 0 : (x.Time.Hour >= beforenoon && x.Time.Hour <= afternoon ? 1 : 2)) } into g
+                             where x.time.ToString("yyyyMM") == DateTime.Today.AddMonths(-1).ToString("yyyyMM")
+                             group x by new { x.ID, x.time.Date, time_type = ((int)x.time.DayOfWeek == 0 || (int)x.time.DayOfWeek == 6 ? 0 : (x.time.Hour >= beforenoon && x.time.Hour <= afternoon ? 1 : 2)) } into g
                              select new
                              {
                                  ID = g.Key.ID,
                                  Dates = g.Key.Date,
-                                 totalminutes = (g.Max(a => a.Time) - g.Min(a => a.Time)).TotalMinutes,
+                                 totalminutes = (g.Max(a => a.time) - g.Min(a => a.time)).TotalMinutes,
                                  time_type = g.Key.time_type
                              };
             //算出上個月總時間
@@ -146,7 +151,7 @@ namespace UserData_webapi
                              select new
                              {
                                  ID = g.Key,
-                                 notcheckday = (DateTime.Now - g.Max(y => y.Time)).Days,
+                                 notcheckday = (DateTime.Now - g.Max(y => y.time)).Days,
                              };
 
 
@@ -162,7 +167,7 @@ namespace UserData_webapi
                              select new UserPoint
                              {
                                  ID = a.ID,
-                                 Name = a.ChineseName,
+                                 ChineseName = a.ChineseName,
                                  grade = a.grade,
                                  state = a.state,
                                  monaverage = b == null ? new float() : b.monaverage,

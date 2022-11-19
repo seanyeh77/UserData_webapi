@@ -29,7 +29,7 @@ namespace UserData_webapi.Controllers
         [HttpGet]
         public IActionResult List()
         {
-            return Ok(_userLogRepistory.UserLogs_All);
+            return Ok(_userLogRepistory.AllUserLogs(_userCardRepistory));
         }
         [HttpGet("table")]
         public IActionResult Listtable()
@@ -103,7 +103,7 @@ namespace UserData_webapi.Controllers
                             {
                                 userLogByFace.ID = userID;
                                 userLogByFace.time = DateTime.Now;
-                                userLogByFace.state = (state == "in" ? true : false);
+                                userLogByFace.state = (state == "in");
                                 _userLogRepistory.UserLogByFace_Insert(userLogByFace);
                                 _userDataRepository.All.FirstOrDefault(x => x.ID == userID).state = userLogByFace.state;
                                 string message = $"{_userDataRepository.getchinesename(userID)}已{(userLogByFace.state ? "簽到" : "簽退")}({userID})";
@@ -129,6 +129,43 @@ namespace UserData_webapi.Controllers
                 }
             }
             catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpPost("id")]
+        public async Task<IActionResult> Createbyid([FromBody]check_in check_In)
+        {
+            try
+            {
+                linkline linkline = new linkline(_configuration);
+                SendEmail sendEmail = new SendEmail(_configuration, _userDataRepository);
+                UserLogByFace userLogByFace = new UserLogByFace();
+
+                string ID = check_In.ID;
+                string state = check_In.state;
+
+                if (_userDataRepository.DoesItemExistlockfalse(check_In.ID))
+                {
+                    userLogByFace.ID = ID;
+                    userLogByFace.time = DateTime.Now;
+                    userLogByFace.state = (state == "in");
+                    _userLogRepistory.UserLogByFace_Insert(userLogByFace);
+                    _userDataRepository.All.FirstOrDefault(x => x.ID == ID).state = userLogByFace.state;
+                    string message = $"{_userDataRepository.getchinesename(ID)}已{(userLogByFace.state ? "簽到" : "簽退")}({ID})";
+                    await sendEmail.sendemail_id(ID, "成功打卡通知", message);
+                    linkline.sendlinenotify(message, "level1");
+                    return Ok();
+                }
+                else
+                {
+                    string message = $"{_userDataRepository.getchinesename(ID)}想要{(userLogByFace.state ? "簽到" : "簽退")}({ID})\n但被結凍";
+                    await sendEmail.sendemail_id(ID, "打卡失敗通知", message);
+                    linkline.sendlinenotify(message, "level1");
+                    return BadRequest("lock");
+                }
+            }
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
